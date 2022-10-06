@@ -461,6 +461,26 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             paused = 1;
         }
 
+        if (uMsg == MCI_INFO)
+        {
+            dprintf("  MCI_INFO\n");
+            LPMCI_INFO_PARMS parms = (LPVOID)dwParam;
+
+            if(fdwCommand & MCI_INFO_PRODUCT)
+            {
+                dprintf("    MCI_INFO_PRODUCT\n");
+                memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"CD Audio", 9);
+                dprintf("        Return: %s\r\n", parms->lpstrReturn);
+            }
+
+            if(fdwCommand & MCI_INFO_MEDIA_IDENTITY)
+            {
+                dprintf("    MCI_INFO_MEDIA_IDENTITY\n");
+                memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"ABCD1234", 9);
+                dprintf("        Return: %s\r\n", parms->lpstrReturn);
+            }
+        }
+
         /* Handling of MCI_SYSINFO (Heavy Gear, Battlezone2, Interstate 76) */
         if (uMsg == MCI_SYSINFO)
         {
@@ -471,8 +491,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             {
                 dprintf("    MCI_SYSINFO_QUANTITY\r\n");
                 memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"1", 2); /* quantity = 1 */
-                parms->dwRetSize = sizeof(DWORD);
-                parms->dwNumber = MAGIC_DEVICEID;
+                //parms->dwRetSize = sizeof(DWORD);
+                //parms->dwNumber = MAGIC_DEVICEID;
                 dprintf("        Return: %s\r\n", parms->lpstrReturn);
             }
 
@@ -480,8 +500,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             {
                 dprintf("    MCI_SYSINFO_NAME\r\n");
                 memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"cdaudio", 8); /* name = cdaudio */
-                parms->dwRetSize = sizeof(DWORD);
-                parms->dwNumber = MAGIC_DEVICEID;
+                //parms->dwRetSize = sizeof(DWORD);
+                //parms->dwNumber = MAGIC_DEVICEID;
                 dprintf("        Return: %s\r\n", parms->lpstrReturn);
             }
         }
