@@ -8,6 +8,10 @@ EXPORTS
     mciSendCommandA                  = fake_mciSendCommandA
     mciSendStringA                   = fake_mciSendStringA
     
+    midiStreamOut                    = fake_midiStreamOut
+    waveOutOpen                      = fake_waveOutOpen
+    waveOutWrite                     = fake_waveOutWrite
+
     auxGetDevCapsW                   = fake_auxGetDevCapsW
     auxOutMessage                    = fake_auxOutMessage
     CloseDriver                      = fake_CloseDriver
@@ -25,6 +29,8 @@ EXPORTS
     joyReleaseCapture                = fake_joyReleaseCapture
     joySetCapture                    = fake_joySetCapture
     joySetThreshold                  = fake_joySetThreshold
+    mciDriverNotify                  = fake_mciDriverNotify
+    mciDriverYield                   = fake_mciDriverYield
     mciExecute                       = fake_mciExecute
     mciFreeCommandResource           = fake_mciFreeCommandResource
     mciGetCreatorTask                = fake_mciGetCreatorTask
@@ -32,12 +38,14 @@ EXPORTS
     mciGetDeviceIDFromElementIDA     = fake_mciGetDeviceIDFromElementIDA
     mciGetDeviceIDFromElementIDW     = fake_mciGetDeviceIDFromElementIDW
     mciGetDeviceIDW                  = fake_mciGetDeviceIDW
+    mciGetDriverData                 = fake_mciGetDriverData
     mciGetErrorStringA               = fake_mciGetErrorStringA
     mciGetErrorStringW               = fake_mciGetErrorStringW
     mciGetYieldProc                  = fake_mciGetYieldProc
     mciLoadCommandResource           = fake_mciLoadCommandResource
     mciSendCommandW                  = fake_mciSendCommandW
     mciSendStringW                   = fake_mciSendStringW
+    mciSetDriverData                 = fake_mciSetDriverData
     mciSetYieldProc                  = fake_mciSetYieldProc
     midiConnect                      = fake_midiConnect
     midiDisconnect                   = fake_midiDisconnect
@@ -76,7 +84,6 @@ EXPORTS
     midiOutUnprepareHeader           = fake_midiOutUnprepareHeader
     midiStreamClose                  = fake_midiStreamClose
     midiStreamOpen                   = fake_midiStreamOpen
-    midiStreamOut                    = fake_midiStreamOut
     midiStreamPause                  = fake_midiStreamPause
     midiStreamPosition               = fake_midiStreamPosition
     midiStreamProperty               = fake_midiStreamProperty
@@ -167,7 +174,6 @@ EXPORTS
     waveOutGetPosition               = fake_waveOutGetPosition
     waveOutGetVolume                 = fake_waveOutGetVolume
     waveOutMessage                   = fake_waveOutMessage
-    waveOutOpen                      = fake_waveOutOpen
     waveOutPause                     = fake_waveOutPause
     waveOutPrepareHeader             = fake_waveOutPrepareHeader
     waveOutReset                     = fake_waveOutReset
@@ -176,4 +182,4 @@ EXPORTS
     waveOutSetPlaybackRate           = fake_waveOutSetPlaybackRate
     waveOutSetVolume                 = fake_waveOutSetVolume
     waveOutUnprepareHeader           = fake_waveOutUnprepareHeader
-    waveOutWrite                     = fake_waveOutWrite
+    
