@@ -22,6 +22,10 @@
 #include <dirent.h>
 #include "player.h"
 
+/* MCI Relay declarations: */
+MCIERROR WINAPI relay_mciSendCommandA(MCIDEVICEID a0, UINT a1, DWORD a2, DWORD a3);
+MCIERROR WINAPI relay_mciSendStringA(LPCSTR a0, LPSTR a1, UINT a2, HWND a3);
+
 #define MAGIC_DEVICEID 0xBEEF
 #define MAX_TRACKS 99
 
@@ -227,6 +231,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 parms->wDeviceID = MAGIC_DEVICEID;
                 return 0;
             }
+            else return relay_mciSendCommandA(IDDevice, uMsg, fdwCommand, dwParam); /* Added MCI relay */
         }
 
         if (fdwCommand & MCI_OPEN_TYPE && !(fdwCommand & MCI_OPEN_TYPE_ID))
@@ -240,6 +245,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 parms->wDeviceID = MAGIC_DEVICEID;
                 return 0;
             }
+            else return relay_mciSendCommandA(IDDevice, uMsg, fdwCommand, dwParam); /* Added MCI relay */
         }
 
     }
@@ -602,7 +608,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
     }
 
     /* fallback */
-    return MCIERR_UNRECOGNIZED_COMMAND;
+    //return MCIERR_UNRECOGNIZED_COMMAND;
+    else return relay_mciSendCommandA(IDDevice, uMsg, fdwCommand, dwParam); /* Added MCI relay */
 }
 
 /* MCI command strings */
@@ -801,7 +808,8 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         }
     }
 
-    return 0;
+    //return 0;
+    return relay_mciSendStringA(cmd, ret, cchReturn, hwndCallback); /* Added MCI relay */
 }
 
 UINT WINAPI fake_auxGetNumDevs()
