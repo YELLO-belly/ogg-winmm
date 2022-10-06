@@ -799,7 +799,12 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             parms.dwItem = MCI_STATUS_LENGTH;
             parms.dwTrack = track;
             fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STATUS, MCI_STATUS_ITEM|MCI_TRACK, (DWORD_PTR)&parms);
-            sprintf(ret, "%d", parms.dwReturn);
+            if(time_format == MCI_FORMAT_MILLISECONDS){
+                sprintf(ret, "%d", parms.dwReturn);
+            }
+            if(time_format == MCI_FORMAT_MSF || time_format == MCI_FORMAT_TMSF){
+                sprintf(ret, "%02d:%02d:%02d", MCI_MSF_MINUTE(parms.dwReturn), MCI_MSF_SECOND(parms.dwReturn), MCI_MSF_FRAME(parms.dwReturn));
+            }
             return 0;
         }
         if (strstr(cmdbuf, "length"))
@@ -807,7 +812,12 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             static MCI_STATUS_PARMS parms;
             parms.dwItem = MCI_STATUS_LENGTH;
             fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&parms);
-            sprintf(ret, "%d", parms.dwReturn);
+            if(time_format == MCI_FORMAT_MILLISECONDS){
+                sprintf(ret, "%d", parms.dwReturn);
+            }
+            if(time_format == MCI_FORMAT_MSF || time_format == MCI_FORMAT_TMSF){
+                sprintf(ret, "%02d:%02d:%02d", MCI_MSF_MINUTE(parms.dwReturn), MCI_MSF_SECOND(parms.dwReturn), MCI_MSF_FRAME(parms.dwReturn));
+            }
             return 0;
         }
         if (sscanf(cmdbuf, "status %*s position track %d", &track) == 1)
@@ -816,7 +826,15 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             parms.dwItem = MCI_STATUS_POSITION;
             parms.dwTrack = track;
             fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STATUS, MCI_STATUS_ITEM|MCI_TRACK, (DWORD_PTR)&parms);
-            sprintf(ret, "%d", parms.dwReturn);
+            if(time_format == MCI_FORMAT_MILLISECONDS){
+                sprintf(ret, "%d", parms.dwReturn);
+            }
+            if(time_format == MCI_FORMAT_MSF){
+                sprintf(ret, "%02d:%02d:%02d", MCI_MSF_MINUTE(parms.dwReturn), MCI_MSF_SECOND(parms.dwReturn), MCI_MSF_FRAME(parms.dwReturn));
+            }
+            if(time_format == MCI_FORMAT_TMSF){
+                sprintf(ret, "%02d:%02d:%02d:%02d", MCI_TMSF_TRACK(parms.dwReturn), MCI_TMSF_MINUTE(parms.dwReturn), MCI_TMSF_SECOND(parms.dwReturn), MCI_TMSF_FRAME(parms.dwReturn));
+            }
             return 0;
         }
         if (strstr(cmdbuf, "position"))
@@ -824,7 +842,15 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             static MCI_STATUS_PARMS parms;
             parms.dwItem = MCI_STATUS_POSITION;
             fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&parms);
-            sprintf(ret, "%d", parms.dwReturn);
+            if(time_format == MCI_FORMAT_MILLISECONDS){
+                sprintf(ret, "%d", parms.dwReturn);
+            }
+            if(time_format == MCI_FORMAT_MSF){
+                sprintf(ret, "%02d:%02d:%02d", MCI_MSF_MINUTE(parms.dwReturn), MCI_MSF_SECOND(parms.dwReturn), MCI_MSF_FRAME(parms.dwReturn));
+            }
+            if(time_format == MCI_FORMAT_TMSF){
+                sprintf(ret, "%02d:%02d:%02d:%02d", MCI_TMSF_TRACK(parms.dwReturn), MCI_TMSF_MINUTE(parms.dwReturn), MCI_TMSF_SECOND(parms.dwReturn), MCI_TMSF_FRAME(parms.dwReturn));
+            }
             return 0;
         }
         if (strstr(cmdbuf, "media present"))
