@@ -240,8 +240,6 @@ int plr_pump()
     return 1;
 }
 
-/* TODO: */
-/*
 int plr_seek(int sec)
 {
     int len = (int)ov_time_total(&plr_vf, -1);
@@ -255,4 +253,6 @@ int plr_tell()
     int tpos = (int)ov_time_tell(&plr_vf);
     return tpos;
 }
-*/
+
+// ogg vorbis player reference commands:
+// https://xiph.org/vorbis/doc/vorbisfile/reference.html
