@@ -36,6 +36,55 @@ HINSTANCE loadRealDLL()
     return realWinmmDLL;
 }
 
+/* Added for MCI relay */
+MCIERROR WINAPI relay_mciSendCommandA(MCIDEVICEID a0, UINT a1, DWORD a2, DWORD a3)
+{
+	static MCIERROR(WINAPI *funcp)(MCIDEVICEID a0, UINT a1, DWORD a2, DWORD a3) = NULL;
+	if (funcp == NULL)
+		funcp = (void*)GetProcAddress(loadRealDLL(), "mciSendCommandA");
+	return (*funcp)(a0, a1, a2, a3);
+}
+
+MCIERROR WINAPI relay_mciSendStringA(LPCSTR a0, LPSTR a1, UINT a2, HWND a3)
+{
+	static MCIERROR(WINAPI *funcp)(LPCSTR a0, LPSTR a1, UINT a2, HWND a3) = NULL;
+	if (funcp == NULL)
+		funcp = (void*)GetProcAddress(loadRealDLL(), "mciSendStringA");
+	return (*funcp)(a0, a1, a2, a3);
+}
+
+BOOL WINAPI fake_mciDriverNotify(HWND a0, MCIDEVICEID a1, UINT a2)
+{
+	static BOOL (WINAPI *funcp)(HWND a0, MCIDEVICEID a1, UINT a2) = NULL;
+	if (funcp == NULL)
+		funcp = (void*)GetProcAddress(loadRealDLL(), "mciDriverNotify");
+	return (*funcp)(a0, a1, a2);
+}
+
+UINT WINAPI fake_mciDriverYield(MCIDEVICEID a0)
+{
+	static UINT (WINAPI *funcp)(MCIDEVICEID a0) = NULL;
+	if (funcp == NULL)
+		funcp = (void*)GetProcAddress(loadRealDLL(), "mciDriverYield");
+	return (*funcp)(a0);
+}
+
+DWORD_PTR WINAPI fake_mciGetDriverData(MCIDEVICEID a0)
+{
+	static DWORD_PTR (WINAPI *funcp)(MCIDEVICEID a0) = NULL;
+	if (funcp == NULL)
+		funcp = (void*)GetProcAddress(loadRealDLL(), "mciGetDriverData");
+	return (*funcp)(a0);
+}
+
+BOOL WINAPI fake_mciSetDriverData(MCIDEVICEID a0, DWORD_PTR a1)
+{
+	static BOOL (WINAPI *funcp)(MCIDEVICEID a0, DWORD_PTR a1) = NULL;
+	if (funcp == NULL)
+		funcp = (void*)GetProcAddress(loadRealDLL(), "mciSetDriverData");
+	return (*funcp)(a0, a1);
+}
+
 /**/
 /* stubs for functions to call from the real winmm.dll */
 /**/
