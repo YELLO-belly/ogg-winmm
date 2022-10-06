@@ -771,6 +771,21 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     /* Handle "status cdaudio/alias" */
     sprintf(cmp_str, "status %s", alias_s);
     if (strstr(cmdbuf, cmp_str)){
+        if (strstr(cmdbuf, "time format"))
+        {
+            if(time_format==MCI_FORMAT_MILLISECONDS){
+                strcpy(ret, "milliseconds");
+                return 0;
+            }
+            if(time_format==MCI_FORMAT_TMSF){
+                strcpy(ret, "tmsf");
+                return 0;
+            }
+            if(time_format==MCI_FORMAT_MSF){
+                strcpy(ret, "msf");
+                return 0;
+            }
+        }
         if (strstr(cmdbuf, "number of tracks"))
         {
             dprintf("  Returning number of tracks (%d)\r\n", numTracks);
