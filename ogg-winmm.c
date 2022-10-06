@@ -26,7 +26,7 @@
 MCIERROR WINAPI relay_mciSendCommandA(MCIDEVICEID a0, UINT a1, DWORD a2, DWORD a3);
 MCIERROR WINAPI relay_mciSendStringA(LPCSTR a0, LPSTR a1, UINT a2, HWND a3);
 
-#define MAGIC_DEVICEID 0xBEEF
+int MAGIC_DEVICEID = 48879; /* 48879 = 0xBEEF */
 #define MAX_TRACKS 99
 
 struct track_info
