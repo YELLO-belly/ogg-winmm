@@ -1,3 +1,8 @@
+# Work in progress...
+- Improving play logic with proper resume from a MCI_STOP/MCI_PAUSE as per win9x behaviour.
+- Various other small fixes and tweaks for Length and postion and MciSendString.
+- TODO: MCI_SEEK and ability to play tracks from arbitrary positions.
+
 # ogg-winmm CD Audio Emulator (2020 revision by DD)
 
 v.0.2.0.2 rev3:
