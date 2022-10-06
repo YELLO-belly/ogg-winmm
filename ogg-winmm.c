@@ -108,7 +108,7 @@ int player_main(struct play_info *info)
     if(notify && !paused)
     {
         dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, 0xBEEF);
+        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
         notify = 0;
         /* NOTE: Notify message after successful playback is not working in Vista+.
         MCI_STATUS_MODE does not update to show that the track is no longer playing.
@@ -129,6 +129,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         memset(tracks, 0, sizeof tracks);
 
         InitializeCriticalSection(&cs);
+
+        int bMCIDevID = GetPrivateProfileInt("winmm", "MCIDevID", 0, ".\\winmm.ini");
+        if(bMCIDevID) MAGIC_DEVICEID = 1; /* 48879 = 0xBEEF */
 
         char *last = strrchr(music_path, '\\');
         if (last)
