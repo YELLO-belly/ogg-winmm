@@ -759,6 +759,13 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD_PTR)&parms);
             return 0;
         }
+        if (strstr(cmdbuf, "ms")) // Another accepted string for milliseconds
+        {
+            static MCI_SET_PARMS parms;
+            parms.dwTimeFormat = MCI_FORMAT_MILLISECONDS;
+            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD_PTR)&parms);
+            return 0;
+        }
     }
 
     /* Handle "status cdaudio/alias" */
