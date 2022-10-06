@@ -675,6 +675,15 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         return 0;
     }
 
+    // MCI_GETDEVCAPS SendString equivalent 
+    sprintf(cmp_str, "capability %s", alias_s);
+    if (strstr(cmdbuf, cmp_str))
+    {
+        // Return TRUE for all queries 
+        strcpy(ret, "TRUE");
+        return 0;
+    }
+
     /* Example: "sysinfo cdaudio name 1 open" returns "cdaudio" or the alias.*/
     if (strstr(cmdbuf, "sysinfo cdaudio name"))
     {
