@@ -176,7 +176,11 @@ int plr_pump()
         fprintf(fp, "%d\n"
                     "#\n"
                     "# Winmm.dll emulated CD music volume override.\n"
-                    "# Change the number to the desired volume level (0-100).", ogg_winmm_vol);
+                    "# Change the number to the desired volume level (0-100).\n"
+                    "\n\r"
+                    "[winmm]\n"
+                    "# Use alternate MCI device ID:\n"
+                    "MCIDevID = 0", ogg_winmm_vol);
         fclose(fp);
     }
 
