@@ -122,7 +122,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     if (fdwReason == DLL_PROCESS_ATTACH)
     {
 #ifdef _DEBUG
-        fh = fopen("winmm.log", "w"); /* Renamed to .log*/
+        int bLog = GetPrivateProfileInt("winmm", "Log", 0, ".\\winmm.ini");
+        if(bLog)fh = fopen("winmm.log", "w"); /* Renamed to .log*/
 #endif
         GetModuleFileName(hinstDLL, music_path, sizeof music_path);
 
