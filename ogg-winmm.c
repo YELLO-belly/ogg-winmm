@@ -146,12 +146,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         {
             snprintf(tracks[i].path, sizeof tracks[i].path, "%s\\Track%02d.ogg", music_path, i);
             tracks[i].length = plr_length(tracks[i].path);
-            tracks[i].position = position;
+            tracks[i].position = position + 2; //2 second pre-gap
 
             if (tracks[i].length < 4)
             {
                 tracks[i].path[0] = '\0';
-                position += 4; /* missing tracks are 4 second data tracks for us */
+                //position += 4; /* missing tracks are 4 second data tracks for us */
             }
             else
             {
