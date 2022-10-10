@@ -660,12 +660,18 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     else {
                         /* Current position */
                         int track = current % 0xFF;
-                        if (time_format == MCI_FORMAT_MILLISECONDS)
-                            parms->dwReturn = tracks[track].position * 1000;
-                        else if (time_format == MCI_FORMAT_MSF)
-                            parms->dwReturn = MCI_MAKE_MSF(tracks[track].position / 60, tracks[track].position % 60, 0);
-                        else /* TMSF */
-                            parms->dwReturn = MCI_MAKE_TMSF(track, 0, 0, 0);
+                        if (time_format == MCI_FORMAT_MILLISECONDS){
+                            if(!playing)parms->dwReturn = tracks[track].position * 1000;
+                            else parms->dwReturn = tracks[track].position * 1000 + plr_tell() * 1000;
+                        }
+                        else if (time_format == MCI_FORMAT_MSF){
+                            if(!playing)parms->dwReturn = MCI_MAKE_MSF(tracks[track].position / 60, tracks[track].position % 60, 0);
+                            else parms->dwReturn = MCI_MAKE_MSF((tracks[track].position + plr_tell()) / 60, (tracks[track].position + plr_tell()) % 60, 0);
+                        }
+                        else /* TMSF */ {
+                            if(!playing)parms->dwReturn = MCI_MAKE_TMSF(track, tracks[track].position / 60, tracks[track].position % 60, 0);
+                            else parms->dwReturn = MCI_MAKE_TMSF(track, plr_tell() / 60, plr_tell() % 60, 0);
+                        }
                     }
                 }
 
