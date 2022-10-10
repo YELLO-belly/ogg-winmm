@@ -193,17 +193,6 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
     dprintf("mciSendCommandA(IDDevice=%p, uMsg=%p, fdwCommand=%p, dwParam=%p)\r\n", IDDevice, uMsg, fdwCommand, dwParam);
 
-    if (fdwCommand & MCI_NOTIFY)
-    {
-        dprintf("  MCI_NOTIFY\r\n");
-        notify = 1; /* storing the notify request */
-    }
-
-    if (fdwCommand & MCI_WAIT)
-    {
-        dprintf("  MCI_WAIT\r\n");
-    }
-
     if (uMsg == MCI_OPEN)
     {
         LPMCI_OPEN_PARMS parms = (LPVOID)dwParam;
@@ -252,6 +241,11 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
     if (IDDevice == MAGIC_DEVICEID || IDDevice == 0 || IDDevice == 0xFFFFFFFF)
     {
+        if (fdwCommand & MCI_WAIT)
+        {
+            dprintf("  MCI_WAIT\r\n");
+        }
+        
         if (uMsg == MCI_GETDEVCAPS)
         {
             LPMCI_GETDEVCAPS_PARMS parms = (LPVOID)dwParam;
@@ -330,6 +324,12 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
 
             dprintf("  MCI_PLAY\r\n");
+            
+            if (fdwCommand & MCI_NOTIFY)
+            {
+                dprintf("  MCI_NOTIFY\r\n");
+                notify = 1; /* storing the notify request */
+            }
 
             if (fdwCommand & MCI_FROM)
             {
