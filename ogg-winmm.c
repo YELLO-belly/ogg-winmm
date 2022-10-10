@@ -506,6 +506,11 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             }
             playing = 0;
             plr_stop();
+            if(notify){
+                dprintf("  Sending MCI_NOTIFY_ABORTED message...\r\n");
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, MAGIC_DEVICEID);
+                notify = 0;
+            }
             
         }
 
