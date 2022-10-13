@@ -432,7 +432,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int a[numTracks];
                     for (int i = 0; i < numTracks+1; i++)
                     {
-                        a[i] = tracks[i].position + tracks[i].length;
+                        a[i] = tracks[i].position;
                     }
                     // Find the closest match:
                     int target = parms->dwTo / 1000;
@@ -462,7 +462,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int a[numTracks];
                     for (int i = 0; i < numTracks+1; i++)
                     {
-                        a[i] = tracks[i].position + tracks[i].length;
+                        a[i] = tracks[i].position;
                     }
                     // Find the closest match:
                     int target = msf_min + msf_sec;
