@@ -309,6 +309,105 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 }
             }
         }
+        
+        // MCI_SEEK implementation. Note that seeking stops playback. MCI_PLAY NULL or MCI_PLAY+MCI_TO starts from seeked position...
+        if (uMsg == MCI_SEEK)
+        {
+            LPMCI_SEEK_PARMS parms = (LPVOID)dwParam;
+            
+            dprintf("  MCI_SEEK\r\n");
+
+            if (fdwCommand & MCI_SEEK_TO_START)
+            {
+                dprintf("    Seek to firstTrack %d\r\n",firstTrack);
+                current = info.first = firstTrack;
+                info.last = lastTrack;
+                plr_stop();
+                playing = 0;
+                plrpos = 0;
+                paused = 0;
+            }
+
+            if (fdwCommand & MCI_SEEK_TO_END)
+            {
+                dprintf("    Seek to end of disc\r\n");
+                // Not very useful as a real disc can not play from this position
+                plr_stop();
+                playing = 0;
+                plrpos = 0;
+                paused = 0;
+            }
+            
+            if (fdwCommand & MCI_TO)
+            {
+                dprintf("    dwTo:   %d\r\n", parms->dwTo);
+
+                if (time_format == MCI_FORMAT_TMSF)
+                {
+                    current = info.first = MCI_TMSF_TRACK(parms->dwTo)+1;
+                    info.last = lastTrack;
+
+                    dprintf("      TRACK  %d\n", MCI_TMSF_TRACK(parms->dwTo));
+                    dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwTo));
+                    dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwTo));
+                    dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwTo));
+                }
+                else if (time_format == MCI_FORMAT_MILLISECONDS)
+                {
+                    // store all track positions in an array:
+                    int a[numTracks];
+                    for (int i = 0; i < numTracks+1; i++)
+                    {
+                        a[i] = tracks[i].position;
+                    }
+                    // Find the closest match:
+                    int target = parms->dwTo / 1000;
+                    int counter = abs(a[0] - target),match;
+                    for (int i = 0; i < numTracks+1; ++i) {
+                        if (abs(a[i] - target) < counter) {
+                            counter=abs(a[i] - target);
+                            match=i;
+                        }
+                    }
+                    current = info.first = match+1;
+                    info.last = lastTrack;
+
+                    dprintf("      mapped milliseconds to %d\n", info.last);
+                }
+                else // MCI_FORMAT_MSF
+                {
+                    dprintf("      MINUTE %d\n", MCI_MSF_MINUTE(parms->dwTo));
+                    dprintf("      SECOND %d\n", MCI_MSF_SECOND(parms->dwTo));
+                    dprintf("      FRAME  %d\n", MCI_MSF_FRAME(parms->dwTo));
+
+                    // Convert minutes and seconds to milliseconds (ignore frames)
+                    int msf_min = MCI_MSF_MINUTE(parms->dwTo) * 60;
+                    int msf_sec = MCI_MSF_SECOND(parms->dwTo);
+
+                    // store all track positions in an array:
+                    int a[numTracks];
+                    for (int i = 0; i < numTracks+1; i++)
+                    {
+                        a[i] = tracks[i].position;
+                    }
+                    // Find the closest match:
+                    int target = msf_min + msf_sec;
+                    int counter = abs(a[0] - target),match;
+                    for (int i = 0; i < numTracks+1; ++i) {
+                        if (abs(a[i] - target) < counter) {
+                            counter=abs(a[i] - target);
+                            match=i;
+                        }
+                    }
+                    current = info.first = match;
+                    info.last = lastTrack;
+                }
+                plr_stop();
+                playing = 0;
+                plrpos = 0;
+                paused = 0;
+            }
+        }
 
         if (uMsg == MCI_CLOSE)
         {
@@ -946,6 +1045,76 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
                 strcpy(ret, "playing");
             }
             return 0;
+        }
+    }
+    
+    // Handle Seek cdaudio
+    sprintf(cmp_str, "seek %s", alias_s);
+    if (strstr(cmdbuf, cmp_str)){
+        if (strstr(cmdbuf, "to start")){
+            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_SEEK_TO_START, (DWORD_PTR)NULL);
+            return 0;
+        }
+        if (strstr(cmdbuf, "to end")){
+            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_SEEK_TO_END, (DWORD_PTR)NULL);
+            return 0;
+        }
+        if(time_format == MCI_FORMAT_MSF){
+            int seek_min = -1, seek_sec = -1;
+            if (sscanf(cmdbuf, "seek %*s to %d:%d", &seek_min, &seek_sec) == 2)
+            {
+                dprintf("MSF seek to x:x\n");
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = MCI_MAKE_MSF(seek_min, seek_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
+            if (sscanf(cmdbuf, "seek %*s to %d", &seek_min) == 1)
+            {
+                dprintf("MSF seek to x\n");
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = MCI_MAKE_MSF(seek_min, 0, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
+        }
+        else if(time_format == MCI_FORMAT_TMSF){
+            int seek_track = -1, seek_min = -1, seek_sec = -1;
+            if (sscanf(cmdbuf, "seek %*s to %d:%d:%d", &seek_track, &seek_min, &seek_sec) == 3)
+            {
+                dprintf("TMSF seek to x:x:x\n");
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = MCI_MAKE_TMSF(seek_track, seek_min, seek_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
+            if (sscanf(cmdbuf, "seek %*s to %d:%d", &seek_track, &seek_min) == 2)
+            {
+                dprintf("TMSF seek to x:x\n");
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = MCI_MAKE_TMSF(seek_track, seek_min, 0, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
+            if (sscanf(cmdbuf, "seek %*s to %d", &seek_track) == 1)
+            {
+                dprintf("TMSF seek to x\n");
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = MCI_MAKE_TMSF(seek_track, 0, 0, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
+        }
+        // Milliseconds
+        else{
+            int seek_ms = -1;
+            if (sscanf(cmdbuf, "seek %*s to %d", &seek_ms) == 1)
+            {
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = seek_ms;
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
         }
     }
 
