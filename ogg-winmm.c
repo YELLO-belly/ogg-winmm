@@ -665,15 +665,18 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                         /* Current position */
                         int track = current % 0xFF;
                         if (time_format == MCI_FORMAT_MILLISECONDS){
-                            if(!playing)parms->dwReturn = tracks[track].position * 1000;
+                            if(!playing && !paused)parms->dwReturn = tracks[track].position * 1000;
+                            else if(!playing && paused)parms->dwReturn = tracks[track].position * 1000 + plrpos * 1000;
                             else parms->dwReturn = tracks[track].position * 1000 + plr_tell() * 1000;
                         }
                         else if (time_format == MCI_FORMAT_MSF){
-                            if(!playing)parms->dwReturn = MCI_MAKE_MSF(tracks[track].position / 60, tracks[track].position % 60, 0);
+                            if(!playing && !paused)parms->dwReturn = MCI_MAKE_MSF(tracks[track].position / 60, tracks[track].position % 60, 0);
+                            else if(!playing && paused)parms->dwReturn = MCI_MAKE_MSF((tracks[track].position + plrpos) / 60, (tracks[track].position + plrpos) % 60, 0);
                             else parms->dwReturn = MCI_MAKE_MSF((tracks[track].position + plr_tell()) / 60, (tracks[track].position + plr_tell()) % 60, 0);
                         }
                         else /* TMSF */ {
-                            if(!playing)parms->dwReturn = MCI_MAKE_TMSF(track, tracks[track].position / 60, tracks[track].position % 60, 0);
+                            if(!playing && !paused)parms->dwReturn = MCI_MAKE_TMSF(track, tracks[track].position / 60, tracks[track].position % 60, 0);
+                            else if(!playing && paused)parms->dwReturn = MCI_MAKE_TMSF(track, plrpos / 60, plrpos % 60, 0);
                             else parms->dwReturn = MCI_MAKE_TMSF(track, plr_tell() / 60, plr_tell() % 60, 0);
                         }
                     }
