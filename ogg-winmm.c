@@ -323,6 +323,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
         {
             LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
 
+            info.last = lastTrack+1; /* default MCI_TO */
+            
             dprintf("  MCI_PLAY\r\n");
             
             if (fdwCommand & MCI_NOTIFY)
@@ -407,7 +409,6 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (info.first > lastTrack)
                     info.first = lastTrack;
 
-                info.last = lastTrack; /* default MCI_TO */
                 paused = 0;
             }
 
@@ -447,7 +448,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
                     dprintf("      mapped milliseconds to %d\n", info.last);
                 }
-                else
+                else // MCI_FORMAT_MSF
                 {
                     dprintf("      MINUTE %d\n", MCI_MSF_MINUTE(parms->dwTo));
                     dprintf("      SECOND %d\n", MCI_MSF_SECOND(parms->dwTo));
@@ -483,16 +484,18 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     info.last = lastTrack;
             }
 
-            if ((info.first && (fdwCommand & MCI_FROM)) || (info.last && (fdwCommand & MCI_TO)) || (paused))
+            if (player)
             {
-                if (player)
-                {
-                    TerminateThread(player, 0);
-                }
-
-                playing = 1;
-                player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+                TerminateThread(player, 0);
             }
+
+            playing = 1;
+            player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+
+            Sleep(10); //Sometimes it seems necessary especially if the program uses MCI_WAIT. 
+            //A small sleep should make sure that the playback starts. Possibly a better 
+            //solution is available but for now a 10 millisecond sleep should not do harm as a real
+            //device will always have some spin-up latency also.
         }
 
         // MCI_STOP and MCI_PAUSE do the same on win9x
@@ -502,6 +505,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             if(uMsg == MCI_PAUSE)dprintf("  MCI_PAUSE\r\n");
             if(playing){
                 plrpos = plr_tell(); // save current position of ogg player
+                dprintf("stop/pause plrpos %d\n",plrpos);
                 paused = 1;
             }
             playing = 0;
@@ -1081,7 +1085,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
                 return 0;
             }
         }
-        // Milliseconds and TMSF
+        // Milliseconds
         else{
             if (sscanf(cmdbuf, "play %*s from %d to %d", &from, &to) == 2)
             {
@@ -1109,9 +1113,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     }    
     // Handle play cdaudio null
     if (strstr(cmdbuf, cmp_str)){
-        static MCI_PLAY_PARMS parms;
-        parms.dwTo = lastTrack;
-        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_TO, (DWORD_PTR)&parms);
+        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, 0, (DWORD_PTR)NULL);
         return 0;
     }
 
