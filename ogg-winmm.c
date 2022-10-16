@@ -15,6 +15,7 @@
  */
 
 /* Code revised by DD (2020) (v.0.2.0.2) */
+// 2022 revisions by Y-B...
 
 #include <windows.h>
 #include <stdio.h>
@@ -684,6 +685,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (parms->dwItem == MCI_STATUS_CURRENT_TRACK)
                 {
                     dprintf("      MCI_STATUS_CURRENT_TRACK\r\n");
+                    parms->dwReturn = current;
                 }
 
                 if (parms->dwItem == MCI_STATUS_LENGTH)
@@ -808,11 +810,19 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (parms->dwItem == MCI_STATUS_TIME_FORMAT)
                 {
                     dprintf("      MCI_STATUS_TIME_FORMAT\r\n");
+                    parms->dwReturn = time_format;
                 }
 
                 if (parms->dwItem == MCI_STATUS_START)
                 {
                     dprintf("      MCI_STATUS_START\r\n");
+                    if (time_format == MCI_FORMAT_MILLISECONDS)
+                        /* FIXME: implying milliseconds */
+                        parms->dwReturn = tracks[firstTrack].position * 1000;
+                    else if (time_format == MCI_FORMAT_MSF)
+                        parms->dwReturn = MCI_MAKE_MSF(tracks[firstTrack].position / 60, tracks[parms->dwTrack].position % 60, 0);
+                    else //TMSF
+                        parms->dwReturn = MCI_MAKE_TMSF(1, 0, 0, 0);
                 }
             }
 
@@ -843,6 +853,20 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     for (int i = 0; cmdbuf[i]; i++)
     {
         cmdbuf[i] = tolower(cmdbuf[i]);
+    }
+
+    if (strstr(cmdbuf, "info cdaudio identity"))
+    {
+        dprintf("  Returning identity: 1\r\n");
+        strcpy(ret, "ABCD1234");
+        return 0;
+    }
+
+    if (strstr(cmdbuf, "info cdaudio product"))
+    {
+        dprintf("  Returning product: 1\r\n");
+        strcpy(ret, "CD Audio");
+        return 0;
     }
 
     if (strstr(cmdbuf, "sysinfo cdaudio quantity"))
@@ -1019,6 +1043,24 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
                 sprintf(ret, "%02d:%02d:%02d", MCI_MSF_MINUTE(parms.dwReturn), MCI_MSF_SECOND(parms.dwReturn), MCI_MSF_FRAME(parms.dwReturn));
             }
             if(time_format == MCI_FORMAT_TMSF){
+                sprintf(ret, "%02d:%02d:%02d:%02d", MCI_TMSF_TRACK(parms.dwReturn), MCI_TMSF_MINUTE(parms.dwReturn), MCI_TMSF_SECOND(parms.dwReturn), MCI_TMSF_FRAME(parms.dwReturn));
+            }
+            return 0;
+        }
+        if (strstr(cmdbuf, "start position"))
+        {
+            static MCI_STATUS_PARMS parms;
+            parms.dwItem = MCI_STATUS_POSITION;
+            parms.dwTrack = firstTrack;
+            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STATUS, MCI_STATUS_ITEM|MCI_TRACK, (DWORD_PTR)&parms);
+            if(time_format == MCI_FORMAT_MILLISECONDS){
+                sprintf(ret, "%d", parms.dwReturn);
+            }
+            if(time_format == MCI_FORMAT_MSF){
+                sprintf(ret, "%02d:%02d:%02d", MCI_MSF_MINUTE(parms.dwReturn), MCI_MSF_SECOND(parms.dwReturn), MCI_MSF_FRAME(parms.dwReturn));
+            }
+            if(time_format == MCI_FORMAT_TMSF){
+	            parms.dwTrack = 1;
                 sprintf(ret, "%02d:%02d:%02d:%02d", MCI_TMSF_TRACK(parms.dwReturn), MCI_TMSF_MINUTE(parms.dwReturn), MCI_TMSF_SECOND(parms.dwReturn), MCI_TMSF_FRAME(parms.dwReturn));
             }
             return 0;
