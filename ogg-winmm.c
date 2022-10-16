@@ -1058,7 +1058,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             return 0;
         }
     }
-    
+
     // Handle Seek cdaudio
     sprintf(cmp_str, "seek %s", alias_s);
     if (strstr(cmdbuf, cmp_str)){
@@ -1071,7 +1071,15 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             return 0;
         }
         if(time_format == MCI_FORMAT_MSF){
-            int seek_min = -1, seek_sec = -1;
+            int seek_min = -1, seek_sec = -1, seek_frm = -1;
+            if (sscanf(cmdbuf, "seek %*s to %d:%d:%d", &seek_min, &seek_sec, &seek_frm) == 3)
+            {
+                dprintf("MSF seek to x:x:x\n");
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = MCI_MAKE_MSF(seek_min, seek_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
             if (sscanf(cmdbuf, "seek %*s to %d:%d", &seek_min, &seek_sec) == 2)
             {
                 dprintf("MSF seek to x:x\n");
@@ -1090,7 +1098,15 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             }
         }
         else if(time_format == MCI_FORMAT_TMSF){
-            int seek_track = -1, seek_min = -1, seek_sec = -1;
+            int seek_track = -1, seek_min = -1, seek_sec = -1, seek_frm = -1;
+            if (sscanf(cmdbuf, "seek %*s to %d:%d:%d:%d", &seek_track, &seek_min, &seek_sec, &seek_frm) == 4)
+            {
+                dprintf("TMSF seek to x:x:x:x\n");
+                static MCI_SEEK_PARMS parms;
+                parms.dwTo = MCI_MAKE_TMSF(seek_track, seek_min, seek_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
             if (sscanf(cmdbuf, "seek %*s to %d:%d:%d", &seek_track, &seek_min, &seek_sec) == 3)
             {
                 dprintf("TMSF seek to x:x:x\n");
@@ -1138,6 +1154,32 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         }
         if(time_format == MCI_FORMAT_MSF){
             int from_sec = -1, to_sec = -1; // seconds
+            int from_frm = -1, to_frm = -1; // frames (ignored for now)
+            if (sscanf(cmdbuf, "play %*s from %d:%d:%d to %d:%d:%d", &from, &from_sec, &from_frm, &to, &to_sec, &to_frm) == 6)
+            {
+                dprintf("MSF play from x:x:x to x:x:x\n");
+                static MCI_PLAY_PARMS parms;
+                parms.dwFrom = MCI_MAKE_MSF(from, from_sec, 0);
+                parms.dwTo = MCI_MAKE_MSF(to, to_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM|MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
+            if (sscanf(cmdbuf, "play %*s from %d:%d:%d", &from, &from_sec, &from_frm) == 3)
+            {
+                dprintf("MSF play from x:x:x\n");
+                static MCI_PLAY_PARMS parms;
+                parms.dwFrom = MCI_MAKE_MSF(from, from_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM, (DWORD_PTR)&parms);
+                return 0;
+            }
+            if (sscanf(cmdbuf, "play %*s to %d:%d:%d", &to, &to_sec, &to_frm) == 3)
+            {
+                dprintf("MSF play to x:x:x\n");
+                static MCI_PLAY_PARMS parms;
+                parms.dwTo = MCI_MAKE_MSF(to, to_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
             if (sscanf(cmdbuf, "play %*s from %d:%d to %d:%d", &from, &from_sec, &to, &to_sec) == 4)
             {
                 dprintf("MSF play from x:x to x:x\n");
@@ -1192,6 +1234,32 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         else if(time_format == MCI_FORMAT_TMSF){
             int from_min = -1, to_min = -1; // minutes
             int from_sec = -1, to_sec = -1; // seconds
+            int from_frm = -1, to_frm = -1; // frames (ignored for now)
+            if (sscanf(cmdbuf, "play %*s from %d:%d:%d:%d to %d:%d:%d:%d", &from, &from_min, &from_sec, &from_frm, &to, &to_min, &to_sec, &to_frm) == 8)
+            {
+                dprintf("TMSF play from x:x:x:x to x:x:x:x\n");
+                static MCI_PLAY_PARMS parms;
+                parms.dwFrom = MCI_MAKE_TMSF(from, from_min, from_sec, 0);
+                parms.dwTo = MCI_MAKE_TMSF(to, to_min, to_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM|MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
+            if (sscanf(cmdbuf, "play %*s from %d:%d:%d:%d", &from, &from_min, &from_sec, &from_frm) == 4)
+            {
+                dprintf("TMSF play from x:x:x:x\n");
+                static MCI_PLAY_PARMS parms;
+                parms.dwFrom = MCI_MAKE_TMSF(from, from_min, from_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM, (DWORD_PTR)&parms);
+                return 0;
+            }
+            if (sscanf(cmdbuf, "play %*s to %d:%d:%d:%d", &to, &to_min, &to_sec, to_frm) == 4)
+            {
+                dprintf("TMSF play to x:x:x:x\n");
+                static MCI_PLAY_PARMS parms;
+                parms.dwTo = MCI_MAKE_TMSF(to, to_min, to_sec, 0);
+                fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_TO, (DWORD_PTR)&parms);
+                return 0;
+            }
             if (sscanf(cmdbuf, "play %*s from %d:%d:%d to %d:%d:%d", &from, &from_min, &from_sec, &to, &to_min, &to_sec) == 6)
             {
                 dprintf("TMSF play from x:x:x to x:x:x\n");
@@ -1293,7 +1361,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
                 return 0;
             }
         }
-    }    
+    }
     // Handle play cdaudio null
     if (strstr(cmdbuf, cmp_str)){
         fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, 0, (DWORD_PTR)NULL);
