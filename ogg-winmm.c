@@ -730,7 +730,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     /* ref. by WinQuake */
                     if((parms->dwTrack > 0) &&  (parms->dwTrack , MAX_TRACKS)){
                         if(tracks[parms->dwTrack].length > 0)
-                            parms->dwReturn = MCI_CDA_TRACK_AUDIO; 
+                            parms->dwReturn = MCI_CDA_TRACK_AUDIO;
+                        else parms->dwReturn = MCI_CDA_TRACK_OTHER;
                     }
                 }
 
@@ -969,6 +970,15 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             return 0;
         }
         int track = 0;
+        if (sscanf(cmdbuf, "status %*s type track %d", &track) == 1)
+        {
+            if((track > 0) &&  (track , MAX_TRACKS)){
+                if(tracks[track].length > 0)
+                    strcpy(ret, "audio");
+                else strcpy(ret, "other");
+            }
+            return 0;
+        }
         if (sscanf(cmdbuf, "status %*s length track %d", &track) == 1)
         {
             static MCI_STATUS_PARMS parms;
