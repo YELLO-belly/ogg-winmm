@@ -993,6 +993,12 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             sprintf(ret, "%d", numTracks);
             return 0;
         }
+        if (strstr(cmdbuf, "current track"))
+        {
+            dprintf("  Current track is (%d)\r\n", current);
+            sprintf(ret, "%d", current);
+            return 0;
+        }
         int track = 0;
         if (sscanf(cmdbuf, "status %*s type track %d", &track) == 1)
         {
