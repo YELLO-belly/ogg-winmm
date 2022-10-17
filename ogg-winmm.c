@@ -355,21 +355,21 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 }
                 else if (time_format == MCI_FORMAT_MILLISECONDS)
                 {
-                    // store all track positions in an array:
-                    int a[numTracks];
-                    for (int i = 0; i < numTracks+1; i++)
-                    {
-                        a[i] = tracks[i].position;
-                    }
-                    // Find the closest match:
-                    int target = parms->dwTo / 1000;
-                    int counter = abs(a[0] - target),match;
-                    for (int i = 0; i < numTracks+1; ++i) {
-                        if (abs(a[i] - target) < counter) {
-                            counter=abs(a[i] - target);
+                    int target = (parms->dwTo / 1000)+1; //+1 needed for matching logic
+                    int i = firstTrack;
+                    int match = 0, comp_a = 0, comp_b = 0;
+
+                    // Find the match in a range:
+                    while(i < numTracks+1){
+                        comp_a = abs(tracks[i].position);
+                        comp_b = abs(tracks[i].position + tracks[i].length);
+                        if((target - comp_a)*(target - comp_b) <= 0){
                             match=i;
+                            break;
                         }
+                        i++;
                     }
+
                     current = info.first = match+1;
                     info.last = lastTrack;
 
@@ -385,21 +385,21 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int msf_min = MCI_MSF_MINUTE(parms->dwTo) * 60;
                     int msf_sec = MCI_MSF_SECOND(parms->dwTo);
 
-                    // store all track positions in an array:
-                    int a[numTracks];
-                    for (int i = 0; i < numTracks+1; i++)
-                    {
-                        a[i] = tracks[i].position;
-                    }
-                    // Find the closest match:
-                    int target = msf_min + msf_sec;
-                    int counter = abs(a[0] - target),match;
-                    for (int i = 0; i < numTracks+1; ++i) {
-                        if (abs(a[i] - target) < counter) {
-                            counter=abs(a[i] - target);
+                    int target = msf_min + msf_sec +1; //+1 needed for matching logic
+                    int i = firstTrack;
+                    int match = 0, comp_a = 0, comp_b = 0;
+
+                    // Find the match in a range:
+                    while(i < numTracks+1){
+                        comp_a = abs(tracks[i].position);
+                        comp_b = abs(tracks[i].position + tracks[i].length);
+                        if((target - comp_a)*(target - comp_b) <= 0){
                             match=i;
+                            break;
                         }
+                        i++;
                     }
+                    
                     current = info.first = match;
                     info.last = lastTrack;
                 }
@@ -451,25 +451,21 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 {
                     info.first = 0;
                     
-                    // NOTE:
-                    // We are playing single tracks and not from arbitrary positions. 
-                    // With plr_seek and plr_tell we can implement accurate track seeking in the future. (WIP)
-                    
-                    // store all track positions in an array:
-                    int a[numTracks];
-                    for (int i = 0; i < numTracks+1; i++)
-                    {
-                        a[i] = tracks[i].position;
-                    }
-                    // Find the closest match:
-                    int target = parms->dwFrom / 1000;
-                    int counter = abs(a[0] - target),match;
-                    for (int i = 0; i < numTracks+1; ++i) {
-                        if (abs(a[i] - target) < counter) {
-                            counter=abs(a[i] - target);
+                    int target = (parms->dwFrom / 1000)+1; //+1 needed for matching logic
+                    int i = firstTrack;
+                    int match = 0, comp_a = 0, comp_b = 0;
+
+                    // Find the match in a range:
+                    while(i < numTracks+1){
+                        comp_a = abs(tracks[i].position);
+                        comp_b = abs(tracks[i].position + tracks[i].length);
+                        if((target - comp_a)*(target - comp_b) <= 0){
                             match=i;
+                            break;
                         }
+                        i++;
                     }
+
                     info.first = match;
 
                     dprintf("      mapped milliseconds from %d\n", info.first);
@@ -485,21 +481,21 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int msf_min = MCI_MSF_MINUTE(parms->dwFrom) * 60;
                     int msf_sec = MCI_MSF_SECOND(parms->dwFrom);
 
-                    // store all track positions in an array:
-                    int a[numTracks];
-                    for (int i = 0; i < numTracks+1; i++)
-                    {
-                        a[i] = tracks[i].position;
-                    }
-                    // Find the closest match:
-                    int target = msf_min + msf_sec;
-                    int counter = abs(a[0] - target),match;
-                    for (int i = 0; i < numTracks+1; ++i) {
-                        if (abs(a[i] - target) < counter) {
-                            counter=abs(a[i] - target);
+                    int target = msf_min + msf_sec +1; //+1 needed for matching logic
+                    int i = firstTrack;
+                    int match = 0, comp_a = 0, comp_b = 0;
+
+                    // Find the match in a range:
+                    while(i < numTracks+1){
+                        comp_a = abs(tracks[i].position);
+                        comp_b = abs(tracks[i].position + tracks[i].length);
+                        if((target - comp_a)*(target - comp_b) <= 0){
                             match=i;
+                            break;
                         }
+                        i++;
                     }
+
                     info.first = match;
                 }
 
@@ -529,21 +525,21 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 {
                     info.last = info.first;
 
-                    // store all track positions in an array:
-                    int a[numTracks];
-                    for (int i = 0; i < numTracks+1; i++)
-                    {
-                        a[i] = tracks[i].position;
-                    }
-                    // Find the closest match:
-                    int target = parms->dwTo / 1000;
-                    int counter = abs(a[0] - target),match;
-                    for (int i = 0; i < numTracks+1; ++i) {
-                        if (abs(a[i] - target) < counter) {
-                            counter=abs(a[i] - target);
+                    int target = (parms->dwTo / 1000)+1; //+1 needed for matching logic
+                    int i = firstTrack;
+                    int match = 0, comp_a = 0, comp_b = 0;
+
+                    // Find the match in a range:
+                    while(i < numTracks+1){
+                        comp_a = abs(tracks[i].position);
+                        comp_b = abs(tracks[i].position + tracks[i].length);
+                        if((target - comp_a)*(target - comp_b) <= 0){
                             match=i;
+                            break;
                         }
+                        i++;
                     }
+                    
                     info.last = match;
 
                     dprintf("      mapped milliseconds to %d\n", info.last);
@@ -559,21 +555,21 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int msf_min = MCI_MSF_MINUTE(parms->dwTo) * 60;
                     int msf_sec = MCI_MSF_SECOND(parms->dwTo);
 
-                    // store all track positions in an array:
-                    int a[numTracks];
-                    for (int i = 0; i < numTracks+1; i++)
-                    {
-                        a[i] = tracks[i].position;
-                    }
-                    // Find the closest match:
-                    int target = msf_min + msf_sec;
-                    int counter = abs(a[0] - target),match;
-                    for (int i = 0; i < numTracks+1; ++i) {
-                        if (abs(a[i] - target) < counter) {
-                            counter=abs(a[i] - target);
+                    int target = msf_min + msf_sec +1; //+1 needed for matching logic
+                    int i = firstTrack;
+                    int match = 0, comp_a = 0, comp_b = 0;
+
+                    // Find the match in a range:
+                    while(i < numTracks+1){
+                        comp_a = abs(tracks[i].position);
+                        comp_b = abs(tracks[i].position + tracks[i].length);
+                        if((target - comp_a)*(target - comp_b) <= 0){
                             match=i;
+                            break;
                         }
+                        i++;
                     }
+                    
                     info.last = match;
                 }
 
