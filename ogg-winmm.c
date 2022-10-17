@@ -592,11 +592,6 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             playing = 1;
             player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
 
-            if(fdwCommand & MCI_WAIT)Sleep(10);
-            //Sometimes it seems necessary especially if the program uses MCI_WAIT. 
-            //A small sleep should make sure that the playback starts. Possibly a better 
-            //solution is available but for now a 10 millisecond sleep should not do harm as a real
-            //device will always have some spin-up latency also.
         }
 
         // MCI_STOP and MCI_PAUSE do the same on win9x
