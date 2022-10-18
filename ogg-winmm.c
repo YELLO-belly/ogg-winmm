@@ -365,7 +365,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
                 if (time_format == MCI_FORMAT_TMSF)
                 {
-                    current = info.first = MCI_TMSF_TRACK(parms->dwTo)+1;
+                    current = info.first = MCI_TMSF_TRACK(parms->dwTo);
                     info.last = lastTrack;
 
                     dprintf("      TRACK  %d\n", MCI_TMSF_TRACK(parms->dwTo));
@@ -376,15 +376,15 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int msf_min = MCI_TMSF_MINUTE(parms->dwTo) * 60;
                     int msf_sec = MCI_TMSF_SECOND(parms->dwTo);
                     
-                    if(!ACCSeekOFF && msf_min != 0 || msf_sec != 0){
+                    if((!ACCSeekOFF && msf_min != 0) || (!ACCSeekOFF && msf_sec != 0)){
                         seek = 1;
                         plrpos = msf_min+msf_sec;
                         dprintf("seek to plrpos %d\n",plrpos);
                         paused = 1;
                     }
                     else{
-	                    paused = 0;
-	                    plrpos = 0;
+                        paused = 0;
+                        plrpos = 0;
                     }
                 }
                 else if (time_format == MCI_FORMAT_MILLISECONDS)
@@ -506,7 +506,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int msf_sec = MCI_TMSF_SECOND(parms->dwFrom);
                     
                     //If minutes or seconds are not zero -> seek
-                    if(!ACCSeekOFF && msf_min != 0 || msf_sec != 0){
+                    if((!ACCSeekOFF && msf_min != 0) || (!ACCSeekOFF && msf_sec != 0)){
                         seek = 1;
                         plrpos = msf_min+msf_sec;
                         dprintf("seek to plrpos %d\n",plrpos);
@@ -604,17 +604,17 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int msf_sec = MCI_TMSF_SECOND(parms->dwTo);
                     
                     //If minutes or seconds are not zero add to end pos
-                    if(!ACCSeekOFF && msf_min != 0 || msf_sec != 0){
+                    if((!ACCSeekOFF && msf_min != 0) || (!ACCSeekOFF && msf_sec != 0)){
                         if(info.last != info.first)info.last = MCI_TMSF_TRACK(parms->dwTo)+1;
                         plrpos2 = msf_min+msf_sec;
-                        dprintf("seek to plrpos %d\n",plrpos2);
+                        dprintf("seek to plrpos2 %d\n",plrpos2);
                     }
                 }
                 else if (time_format == MCI_FORMAT_MILLISECONDS)
                 {
                     info.last = info.first;
 
-                    int target = (parms->dwTo / 1000)+1; //+1 needed for matching logic
+                    int target = (parms->dwTo / 1000);
                     int i = firstTrack;
                     int match = 0, comp_a = 0, comp_b = 0;
 
@@ -630,12 +630,12 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     }
                     
                     info.last = match;
+                    if(info.last != info.first)info.last = match+1;
                     dprintf("match to track: %d\n",match);
                     //If mci_to does not match track start store the end as plrpos2
-                    if(!ACCSeekOFF && parms->dwFrom / 1000 != tracks[match].position){
-                        if(info.last != info.first)info.last = match+1;
-                        plrpos2 = (parms->dwFrom / 1000) - tracks[match].position;
-                        dprintf("seek to plrpos %d\n",plrpos2);
+                    if(!ACCSeekOFF && parms->dwTo / 1000 != tracks[match].position){
+                        plrpos2 = (parms->dwTo / 1000) - tracks[match].position;
+                        dprintf("seek to plrpos2 %d\n",plrpos2);
                     }
 
                     dprintf("      mapped milliseconds to %d\n", info.last);
@@ -651,7 +651,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     int msf_min = MCI_MSF_MINUTE(parms->dwTo) * 60;
                     int msf_sec = MCI_MSF_SECOND(parms->dwTo);
 
-                    int target = msf_min + msf_sec +1; //+1 needed for matching logic
+                    int target = msf_min + msf_sec;
                     int i = firstTrack;
                     int match = 0, comp_a = 0, comp_b = 0;
 
@@ -667,10 +667,10 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     }
                     
                     info.last = match;
+                    if(info.last != info.first)info.last = match+1;
                     dprintf("match to track: %d\n",match);
                     //If mci_to does not match track start store the end as plrpos2
                     if(!ACCSeekOFF && msf_min+msf_sec != tracks[match].position){
-                        if(info.last != info.first)info.last = match+1;
                         plrpos2 = (msf_min + msf_sec) - tracks[match].position;
                         dprintf("end at plrpos2 %d\n",plrpos2);
                     }
