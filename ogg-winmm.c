@@ -52,7 +52,10 @@ struct play_info
     #define dprintf(...)
 #endif
 
+int ACCSeekOFF = 0;
+int seek = 0;
 int plrpos = 0;
+int plrpos2 = -1;
 int current  = 1;
 int paused = 0;
 int notify = 0;
@@ -83,11 +86,26 @@ int player_main(struct play_info *info)
 
         while (1)
         {
-            if(paused){
+            if(paused || seek){
                 plr_seek(plrpos);
                 paused = 0;
+                seek = 0;
+                plrpos = 0;
             }
-            
+
+            if(plr_tell() >= plrpos2 && plrpos2!=-1 && current == last){
+                plrpos = plr_tell();
+                plrpos2 = -1;
+                paused = 1;
+                if(notify){
+                    dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                    notify = 0;
+                }
+                playing = 0;
+                return 0;
+            }
+
             if (plr_pump() == 0)
                 break;
 
@@ -130,6 +148,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
         int bMCIDevID = GetPrivateProfileInt("winmm", "MCIDevID", 0, ".\\winmm.ini");
         if(bMCIDevID) MAGIC_DEVICEID = 1; /* 48879 = 0xBEEF */
+        int bACCSeekOFF = GetPrivateProfileInt("winmm", "ACCSeekOFF", 0, ".\\winmm.ini");
+        if(bACCSeekOFF) ACCSeekOFF = 1;
 
         char *last = strrchr(music_path, '\\');
         if (last)
@@ -352,6 +372,20 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwTo));
                     dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwTo));
                     dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwTo));
+
+                    int msf_min = MCI_TMSF_MINUTE(parms->dwTo) * 60;
+                    int msf_sec = MCI_TMSF_SECOND(parms->dwTo);
+                    
+                    if(!ACCSeekOFF && msf_min != 0 || msf_sec != 0){
+                        seek = 1;
+                        plrpos = msf_min+msf_sec;
+                        dprintf("seek to plrpos %d\n",plrpos);
+                        paused = 1;
+                    }
+                    else{
+	                    paused = 0;
+	                    plrpos = 0;
+                    }
                 }
                 else if (time_format == MCI_FORMAT_MILLISECONDS)
                 {
@@ -372,6 +406,17 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
                     current = info.first = match+1;
                     info.last = lastTrack;
+
+                    if(!ACCSeekOFF && parms->dwTo / 1000 != tracks[match].position){
+                        seek = 1;
+                        plrpos = (parms->dwTo / 1000) - tracks[match].position;
+                        dprintf("seek to plrpos %d\n",plrpos);
+                        paused = 1;
+                    }
+                    else{
+                        paused = 0;
+                        plrpos = 0;
+                    }
 
                     dprintf("      mapped milliseconds to %d\n", info.last);
                 }
@@ -402,11 +447,20 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     
                     current = info.first = match;
                     info.last = lastTrack;
+                    
+                    if(!ACCSeekOFF && msf_min+msf_sec != tracks[match].position){
+                        seek = 1;
+                        plrpos = (msf_min + msf_sec) - tracks[match].position;
+                        dprintf("seek to plrpos %d\n",plrpos);
+                        paused = 1;
+                    }
+                    else{
+                        paused = 0;
+                        plrpos = 0;
+                    }
                 }
-                plr_stop();
+                if(playing)plr_stop();
                 playing = 0;
-                plrpos = 0;
-                paused = 0;
             }
         }
 
@@ -424,6 +478,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
 
             info.last = lastTrack+1; /* default MCI_TO */
+            plrpos2 = -1;
             
             dprintf("  MCI_PLAY\r\n");
             
@@ -446,6 +501,16 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwFrom));
                     dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwFrom));
                     dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwFrom));
+                    
+                    int msf_min = MCI_TMSF_MINUTE(parms->dwFrom) * 60;
+                    int msf_sec = MCI_TMSF_SECOND(parms->dwFrom);
+                    
+                    //If minutes or seconds are not zero -> seek
+                    if(!ACCSeekOFF && msf_min != 0 || msf_sec != 0){
+                        seek = 1;
+                        plrpos = msf_min+msf_sec;
+                        dprintf("seek to plrpos %d\n",plrpos);
+                    }
                 }
                 else if (time_format == MCI_FORMAT_MILLISECONDS)
                 {
@@ -467,6 +532,13 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     }
 
                     info.first = match;
+                    dprintf("match from track: %d\n",match);
+                    //If mci_from does not match track starting position seek to it.
+                    if(!ACCSeekOFF && parms->dwFrom / 1000 != tracks[match].position){
+                        seek = 1;
+                        plrpos = (parms->dwFrom / 1000) - tracks[match].position;
+                        dprintf("seek to plrpos %d\n",plrpos);
+                    }
 
                     dprintf("      mapped milliseconds from %d\n", info.first);
                 }
@@ -497,6 +569,13 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     }
 
                     info.first = match;
+                    dprintf("match from track: %d\n",match);
+                    //If mci_from does not match track starting position seek to it.
+                    if(!ACCSeekOFF && msf_min+msf_sec != tracks[match].position){
+                        seek = 1;
+                        plrpos = (msf_min + msf_sec) - tracks[match].position;
+                        dprintf("seek to plrpos %d\n",plrpos);
+                    }
                 }
 
                 if (info.first < firstTrack)
@@ -520,6 +599,16 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     dprintf("      MINUTE %d\n", MCI_TMSF_MINUTE(parms->dwTo));
                     dprintf("      SECOND %d\n", MCI_TMSF_SECOND(parms->dwTo));
                     dprintf("      FRAME  %d\n", MCI_TMSF_FRAME(parms->dwTo));
+                    
+                    int msf_min = MCI_TMSF_MINUTE(parms->dwTo) * 60;
+                    int msf_sec = MCI_TMSF_SECOND(parms->dwTo);
+                    
+                    //If minutes or seconds are not zero add to end pos
+                    if(!ACCSeekOFF && msf_min != 0 || msf_sec != 0){
+                        if(info.last != info.first)info.last = MCI_TMSF_TRACK(parms->dwTo)+1;
+                        plrpos2 = msf_min+msf_sec;
+                        dprintf("seek to plrpos %d\n",plrpos2);
+                    }
                 }
                 else if (time_format == MCI_FORMAT_MILLISECONDS)
                 {
@@ -541,6 +630,13 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     }
                     
                     info.last = match;
+                    dprintf("match to track: %d\n",match);
+                    //If mci_to does not match track start store the end as plrpos2
+                    if(!ACCSeekOFF && parms->dwFrom / 1000 != tracks[match].position){
+                        if(info.last != info.first)info.last = match+1;
+                        plrpos2 = (parms->dwFrom / 1000) - tracks[match].position;
+                        dprintf("seek to plrpos %d\n",plrpos2);
+                    }
 
                     dprintf("      mapped milliseconds to %d\n", info.last);
                 }
@@ -571,6 +667,13 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     }
                     
                     info.last = match;
+                    dprintf("match to track: %d\n",match);
+                    //If mci_to does not match track start store the end as plrpos2
+                    if(!ACCSeekOFF && msf_min+msf_sec != tracks[match].position){
+                        if(info.last != info.first)info.last = match+1;
+                        plrpos2 = (msf_min + msf_sec) - tracks[match].position;
+                        dprintf("end at plrpos2 %d\n",plrpos2);
+                    }
                 }
 
                 if (info.last < info.first)
