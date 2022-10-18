@@ -1,14 +1,20 @@
-# Work in progress...
+# ogg-winmm CD Audio Emulator (2022 revision)
+
+v.2,2,0,2
 - Improved play logic with proper resume from a MCI_STOP/MCI_PAUSE as per win9x behaviour.  
   <sub>Tools used for win9x testing: https://github.com/YELLO-belly/mciSendCmd-CDDA-tester</sub>
 - Various other small fixes and tweaks for Length and postion calculations. 
 - Improved MciSendString handling.
 - Improved millisecond and MSF format handling.
 - Implemented MCI_SEEK.
-- TODO: Ability to play tracks from arbitrary positions.
+- Implemented ability to play tracks from arbitrary positions.
 
 Known limitations:
 - Some games rely on accurate track length as a form of copy protection. A real CDAudio track can be read in milliseconds or minutes/seconds/frames (1sec = 75 frames). The currently implemented ogg music player logic can only handle lengths with 1 second accuracy. In short this means that if a game has track length based copy protection it will likely fail to run with the ogg-winmm wrapper.
+
+.
+.
+.
 
 # ogg-winmm CD Audio Emulator (2020 revision by DD)
 
