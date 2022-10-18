@@ -1394,7 +1394,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
                 fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PLAY, MCI_FROM, (DWORD_PTR)&parms);
                 return 0;
             }
-            if (sscanf(cmdbuf, "play %*s to %d:%d:%d:%d", &to, &to_min, &to_sec, to_frm) == 4)
+            if (sscanf(cmdbuf, "play %*s to %d:%d:%d:%d", &to, &to_min, &to_sec, &to_frm) == 4)
             {
                 dprintf("TMSF play to x:x:x:x\n");
                 static MCI_PLAY_PARMS parms;
