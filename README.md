@@ -7,7 +7,8 @@ v.2.2.0.2
 - Improved MciSendString handling.
 - Improved millisecond and MSF format handling.
 - Implemented MCI_SEEK.
-- Implemented ability to play tracks from arbitrary positions.
+- Implemented ability to play tracks from and to arbitrary positions. (winmm.ini ACCSeekOFF = 1 to disable)
+- Use alternate MCI device ID(1) for some games that need it. (winmm.ini MCIDevID = 1 to enable)
 
 Known limitations:
 - Some games rely on accurate track length as a form of copy protection. A real CDAudio track can be read in milliseconds or minutes/seconds/frames (1sec = 75 frames). The currently implemented ogg music player logic can only handle lengths with 1 second accuracy. In short this means that if a game has track length based copy protection it will likely fail to run with the ogg-winmm wrapper.
