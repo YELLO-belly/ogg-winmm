@@ -180,7 +180,9 @@ int plr_pump()
                     "\n\r"
                     "[winmm]\n"
                     "# Use alternate MCI device ID:\n"
-                    "MCIDevID = 0\n"
+                    "MCIDevID = 0\n\n"
+                    "# Disable accurate seek:\n"
+                    "ACCSeekOFF = 0\n\n"
                     "# Enable debug log:\n"
                     "Log = 0", ogg_winmm_vol);
         fclose(fp);
