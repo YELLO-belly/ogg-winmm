@@ -3,7 +3,8 @@
 v.2.2.0.2
 - Improved play logic with proper resume from a MCI_STOP/MCI_PAUSE as per win9x behaviour.  
   <sub>Tools used for win9x testing: https://github.com/YELLO-belly/mciSendCmd-CDDA-tester</sub>
-- Various other small fixes and tweaks for Length and postion calculations. 
+- Interrupt play with MCI_STOP & MCI_PAUSE now causes MCI_NOTIFY_ABORTED to be sent if notify flag has been set as per win9x behaviour.
+- Various other small fixes and tweaks for Length and position calculations. 
 - Improved MciSendString handling.
 - Improved millisecond and MSF format handling.
 - Implemented MCI_SEEK.
