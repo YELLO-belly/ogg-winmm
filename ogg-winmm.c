@@ -961,18 +961,23 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         cmdbuf[i] = tolower(cmdbuf[i]);
     }
 
-    if (strstr(cmdbuf, "info cdaudio identity"))
-    {
-        dprintf("  Returning identity: 1\r\n");
-        strcpy(ret, "ABCD1234");
-        return 0;
-    }
+    // handle info
+    sprintf(cmp_str, "info %s", alias_s);
+    if (strstr(cmdbuf, cmp_str))
+    {    
+        if (strstr(cmdbuf, "identity"))
+        {
+            dprintf("  Returning identity: 1\r\n");
+            strcpy(ret, "ABCD1234");
+            return 0;
+        }
 
-    if (strstr(cmdbuf, "info cdaudio product"))
-    {
-        dprintf("  Returning product: 1\r\n");
-        strcpy(ret, "CD Audio");
-        return 0;
+        if (strstr(cmdbuf, "product"))
+        {
+            dprintf("  Returning product: 1\r\n");
+            strcpy(ret, "CD Audio");
+            return 0;
+        }
     }
 
     // MCI_GETDEVCAPS SendString equivalent 
@@ -997,19 +1002,21 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         return 0;
     }
 
-    if (strstr(cmdbuf, "sysinfo cdaudio quantity"))
-    {
-        dprintf("  Returning quantity: 1\r\n");
-        strcpy(ret, "1");
-        return 0;
-    }
-
-    /* Example: "sysinfo cdaudio name 1 open" returns "cdaudio" or the alias.*/
-    if (strstr(cmdbuf, "sysinfo cdaudio name"))
-    {
-        dprintf("  Returning name: cdaudio\r\n");
-        sprintf(ret, "%s", alias_s);
-        return 0;
+    // Handle sysinfo (does not use alias!)
+    if (strstr(cmdbuf, "sysinfo cdaudio")){
+        if (strstr(cmdbuf, "quantity"))
+        {
+           dprintf("  Returning quantity: 1\r\n");
+           strcpy(ret, "1");
+           return 0;
+        }
+        /* Example: "sysinfo cdaudio name 1 open" returns "cdaudio" or the alias.*/
+        if (strstr(cmdbuf, "name"))
+        {
+            dprintf("  Returning name: cdaudio\r\n");
+            sprintf(ret, "%s", alias_s);
+            return 0;
+        }
     }
 
     /* Handle "stop cdaudio/alias" */
@@ -1028,23 +1035,39 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         return 0;
     }
 
-    /* Look for the use of an alias */
-    /* Example: "open d: type cdaudio alias cd1" */
-    if (strstr(cmdbuf, "type cdaudio alias"))
-    {
-        char *tmp_s = strrchr(cmdbuf, ' ');
-        if (tmp_s && *(tmp_s +1))
+    // Handle "open"
+    if (strstr(cmdbuf, "open")){
+        /* Look for the use of an alias */
+        /* Example: "open d: type cdaudio alias cd1" */
+        if (strstr(cmdbuf, "type cdaudio alias"))
         {
-            sprintf(alias_s, "%s", tmp_s +1);
+            char *tmp_s = strrchr(cmdbuf, ' ');
+            if (tmp_s && *(tmp_s +1))
+            {
+                sprintf(alias_s, "%s", tmp_s +1);
+            }
+            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
+            return 0;
         }
-        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
-        return 0;
-    }
-
-    if (strstr(cmdbuf, "open cdaudio"))
-    {
-        fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
-        return 0;
+        /* Look for the use of an alias */
+        /* Example: "open cdaudio alias cd1" */
+        if (strstr(cmdbuf, "open cdaudio alias"))
+        {
+            char *tmp_s = strrchr(cmdbuf, ' ');
+            if (tmp_s && *(tmp_s +1))
+            {
+                sprintf(alias_s, "%s", tmp_s +1);
+                dprintf("alias is: %s\n",alias_s);
+            }
+            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
+            return 0;
+        }
+        // Normal open cdaudio
+        if (strstr(cmdbuf, "open cdaudio"))
+        {
+            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
+            return 0;
+        }
     }
 
     /* reset alias with "close alias" string */
