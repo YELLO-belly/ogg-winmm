@@ -341,6 +341,23 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     dprintf("      MCI_FORMAT_TMSF\r\n");
                 }
             }
+            if (fdwCommand & MCI_SET_AUDIO)
+            {
+                if (parms->dwAudio == MCI_SET_AUDIO_ALL)
+                {
+                    dprintf("      MCI_SET_AUDIO_ALL\r\n");
+                    if (fdwCommand & MCI_SET_ON)  plr_volume(100);
+                    if (fdwCommand & MCI_SET_OFF) plr_volume(0);
+                }
+                if (parms->dwAudio == MCI_SET_AUDIO_LEFT)
+                {
+                    dprintf("      MCI_SET_AUDIO_LEFT\r\n");
+                }
+                if (parms->dwAudio == MCI_SET_AUDIO_RIGHT)
+                {
+                    dprintf("      MCI_SET_AUDIO_RIGHT\r\n");
+                }
+            }
         }
         
         // MCI_SEEK implementation. Note that seeking stops playback. MCI_PLAY NULL or MCI_PLAY+MCI_TO starts from seeked position...
@@ -1088,8 +1105,8 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         return 0;
     }
 
-    /* Handle "set cdaudio/alias time format" */
-    sprintf(cmp_str, "set %s time format", alias_s);
+    /* Handle "set cdaudio/alias" */
+    sprintf(cmp_str, "set %s", alias_s);
     if (strstr(cmdbuf, cmp_str)){
         if (strstr(cmdbuf, "milliseconds"))
         {
@@ -1117,6 +1134,21 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             static MCI_SET_PARMS parms;
             parms.dwTimeFormat = MCI_FORMAT_MILLISECONDS;
             fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD_PTR)&parms);
+            return 0;
+        }
+        if (strstr(cmdbuf, "audio all off"))
+        {
+            plr_volume(0);
+            return 0;
+        }
+        if (strstr(cmdbuf, "audio all on"))
+        {
+            plr_volume(100);
+            return 0;
+        }
+        if (strstr(cmdbuf, "audio left off") || strstr(cmdbuf, "audio left on") || strstr(cmdbuf, "audio right off") || strstr(cmdbuf, "audio right on"))
+        {
+            // No handling for left / right channel
             return 0;
         }
     }
