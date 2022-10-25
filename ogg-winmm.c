@@ -479,6 +479,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
         if (uMsg == MCI_CLOSE)
         {
             dprintf("  MCI_CLOSE\r\n");
+            time_format = MCI_FORMAT_MSF;
             /* NOTE: MCI_CLOSE does stop the music in Vista+ but the original behaviour did not
                it only closed the handle to the opened device. You could still send MCI commands
                to a default cdaudio device but if you had used an alias you needed to re-open it.
@@ -1083,6 +1084,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     if (strstr(cmdbuf, cmp_str))
     {
         sprintf(alias_s, "cdaudio");
+        time_format = MCI_FORMAT_MSF; // reset time format
         return 0;
     }
 
