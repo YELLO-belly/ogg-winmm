@@ -278,7 +278,19 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             if (fdwCommand & MCI_GETDEVCAPS_ITEM)
             {
                 dprintf("  MCI_GETDEVCAPS_ITEM\r\n");
-                parms->dwReturn = TRUE; // Just return TRUE for all possible queries 
+                
+                if (parms->dwItem == MCI_GETDEVCAPS_CAN_PLAY || parms->dwItem == MCI_GETDEVCAPS_CAN_EJECT || parms->dwItem == MCI_GETDEVCAPS_HAS_AUDIO)
+                {
+                    parms->dwReturn = TRUE;
+                }
+                else if (parms->dwItem == MCI_GETDEVCAPS_DEVICE_TYPE)
+                {
+                    parms->dwReturn = MCI_DEVTYPE_CD_AUDIO;
+                }
+                else
+                {
+                    parms->dwReturn = FALSE;
+                }
             }
         }
 
@@ -963,19 +975,32 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         return 0;
     }
 
-    if (strstr(cmdbuf, "sysinfo cdaudio quantity"))
-    {
-        dprintf("  Returning quantity: 1\r\n");
-        strcpy(ret, "1");
-        return 0;
-    }
-
     // MCI_GETDEVCAPS SendString equivalent 
     sprintf(cmp_str, "capability %s", alias_s);
     if (strstr(cmdbuf, cmp_str))
     {
-        // Return TRUE for all queries 
-        strcpy(ret, "TRUE");
+        if (strstr(cmdbuf, "device type")){
+            strcpy(ret, "cdaudio");
+        }
+        else if (strstr(cmdbuf, "can eject")){
+            strcpy(ret, "true");
+        }
+        else if (strstr(cmdbuf, "can play")){
+            strcpy(ret, "true");
+        }
+        else if (strstr(cmdbuf, "has audio")){
+            strcpy(ret, "true");
+        }
+        else{
+            strcpy(ret, "false");
+        }
+        return 0;
+    }
+
+    if (strstr(cmdbuf, "sysinfo cdaudio quantity"))
+    {
+        dprintf("  Returning quantity: 1\r\n");
+        strcpy(ret, "1");
         return 0;
     }
 
