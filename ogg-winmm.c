@@ -760,7 +760,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 dprintf("        Return: %s\r\n", parms->lpstrReturn);
             }
 
-            if(fdwCommand & MCI_SYSINFO_NAME)
+            if(fdwCommand & MCI_SYSINFO_NAME || fdwCommand & MCI_SYSINFO_INSTALLNAME)
             {
                 dprintf("    MCI_SYSINFO_NAME\r\n");
                 memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"cdaudio", 8); /* name = cdaudio */
@@ -1013,8 +1013,16 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         /* Example: "sysinfo cdaudio name 1 open" returns "cdaudio" or the alias.*/
         if (strstr(cmdbuf, "name"))
         {
+            if (strstr(cmdbuf, "open")){
+                dprintf("  Returning alias name: %s\r\n",alias_s);
+                sprintf(ret, "%s", alias_s);
+                return 0;
+            }
+        }
+        if (strstr(cmdbuf, "name") || strstr(cmdbuf, "installname"))
+        {
             dprintf("  Returning name: cdaudio\r\n");
-            sprintf(ret, "%s", alias_s);
+            strcpy(ret, "cdaudio");
             return 0;
         }
     }
@@ -1208,7 +1216,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
                 sprintf(ret, "%02d:%02d:%02d", MCI_MSF_MINUTE(parms.dwReturn), MCI_MSF_SECOND(parms.dwReturn), MCI_MSF_FRAME(parms.dwReturn));
             }
             if(time_format == MCI_FORMAT_TMSF){
-	            parms.dwTrack = 1;
+                parms.dwTrack = 1;
                 sprintf(ret, "%02d:%02d:%02d:%02d", MCI_TMSF_TRACK(parms.dwReturn), MCI_TMSF_MINUTE(parms.dwReturn), MCI_TMSF_SECOND(parms.dwReturn), MCI_TMSF_FRAME(parms.dwReturn));
             }
             return 0;
