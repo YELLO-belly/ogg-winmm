@@ -363,6 +363,13 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
         // MCI_SEEK implementation. Note that seeking stops playback. MCI_PLAY NULL or MCI_PLAY+MCI_TO starts from seeked position...
         if (uMsg == MCI_SEEK)
         {
+        
+            if(notify){
+                dprintf("  Sending MCI_NOTIFY_ABORTED message...\r\n");
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, MAGIC_DEVICEID);
+                notify = 0;
+            }
+        
             LPMCI_SEEK_PARMS parms = (LPVOID)dwParam;
             
             dprintf("  MCI_SEEK\r\n");
