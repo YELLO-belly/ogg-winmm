@@ -507,7 +507,10 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
         {
             LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
 
-            info.last = lastTrack+1; /* default MCI_TO */
+            int ignore = 0; // To deal with MCI_PLAY NULL while track is playing
+            if(playing) ignore = 1;
+            if(!playing)info.last = lastTrack+1; /* default MCI_TO */
+            if(!playing)info.first = current; // default MCI_FROM
             plrpos2 = -1;
             
             dprintf("  MCI_PLAY\r\n");
@@ -615,6 +618,8 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     info.first = lastTrack;
 
                 paused = 0;
+                info.last = lastTrack+1; /* default MCI_TO */
+                ignore = 0;
             }
 
             if (fdwCommand & MCI_TO)
@@ -711,15 +716,23 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
                 if (info.last > lastTrack)
                     info.last = lastTrack;
+                
+                if(ignore){
+                    seek = 1;
+                    plrpos = plr_tell();
+                    ignore = 0;
+                }
             }
 
-            if (player)
-            {
-                TerminateThread(player, 0);
-            }
+            if(!ignore){
+                if (player)
+                {
+                    TerminateThread(player, 0);
+                }
 
-            playing = 1;
-            player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+                playing = 1;
+                player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+            }
 
         }
 
