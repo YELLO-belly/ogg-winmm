@@ -52,6 +52,9 @@ struct play_info
     #define dprintf(...)
 #endif
 
+int FullNotify = 0;
+int opened = 0;
+int sendStringNotify = 0;
 int ACCSeekOFF = 0;
 int seek = 0;
 int plrpos = 0;
@@ -150,6 +153,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         if(bMCIDevID) MAGIC_DEVICEID = 1; /* 48879 = 0xBEEF */
         int bACCSeekOFF = GetPrivateProfileInt("winmm", "ACCSeekOFF", 0, ".\\winmm.ini");
         if(bACCSeekOFF) ACCSeekOFF = 1;
+        int bFullNotify = GetPrivateProfileInt("winmm", "FullNotify", 0, ".\\winmm.ini");
+        if(bFullNotify) FullNotify = 1;
 
         char *last = strrchr(music_path, '\\');
         if (last)
@@ -239,6 +244,14 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             {
                 dprintf("  Returning magic device id for MCI_DEVTYPE_CD_AUDIO\r\n");
                 parms->wDeviceID = MAGIC_DEVICEID;
+                if (fdwCommand & MCI_NOTIFY)
+                {
+                    if (FullNotify && !opened){
+                        dprintf("  MCI_NOTIFY\r\n");
+                        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                    }
+                }
+                opened = 1;
                 return 0;
             }
             else return relay_mciSendCommandA(IDDevice, uMsg, fdwCommand, dwParam); /* Added MCI relay */
@@ -253,6 +266,14 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             {
                 dprintf("  Returning magic device id for MCI_DEVTYPE_CD_AUDIO\r\n");
                 parms->wDeviceID = MAGIC_DEVICEID;
+                if (fdwCommand & MCI_NOTIFY)
+                {
+                    if (FullNotify && !opened){
+                        dprintf("  MCI_NOTIFY\r\n");
+                        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                    }
+                }
+                opened = 1;
                 return 0;
             }
             else return relay_mciSendCommandA(IDDevice, uMsg, fdwCommand, dwParam); /* Added MCI relay */
@@ -290,6 +311,15 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 else
                 {
                     parms->dwReturn = FALSE;
+                }
+            }
+            if (fdwCommand & MCI_NOTIFY)
+            {
+                if (FullNotify && opened){
+                    dprintf("  MCI_NOTIFY\r\n");
+                    notify = 0; 
+                    // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                 }
             }
         }
@@ -356,6 +386,15 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (parms->dwAudio == MCI_SET_AUDIO_RIGHT)
                 {
                     dprintf("      MCI_SET_AUDIO_RIGHT\r\n");
+                }
+            }
+            if (fdwCommand & MCI_NOTIFY)
+            {
+                if (FullNotify && opened){
+                    dprintf("  MCI_NOTIFY\r\n");
+                    notify = 0; 
+                    // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                 }
             }
         }
@@ -498,12 +537,29 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if(playing)plr_stop();
                 playing = 0;
             }
+            if ((fdwCommand & MCI_NOTIFY) || sendStringNotify)
+            {
+                if (FullNotify && opened){
+                    dprintf("  MCI_NOTIFY\r\n");
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                }
+                sendStringNotify = 0;
+            }
         }
 
         if (uMsg == MCI_CLOSE)
         {
             dprintf("  MCI_CLOSE\r\n");
             time_format = MCI_FORMAT_MSF;
+            if (fdwCommand & MCI_NOTIFY)
+            {
+                if (FullNotify && opened){
+                    dprintf("  MCI_NOTIFY\r\n");
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                    notify = 0;
+                }
+            }
+            opened = 0;
             /* NOTE: MCI_CLOSE does stop the music in Vista+ but the original behaviour did not
                it only closed the handle to the opened device. You could still send MCI commands
                to a default cdaudio device but if you had used an alias you needed to re-open it.
@@ -512,6 +568,12 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
         if (uMsg == MCI_PLAY)
         {
+            if(notify){
+                dprintf("  Sending MCI_NOTIFY_ABORTED message...\r\n");
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, MAGIC_DEVICEID);
+                notify = 0;
+            }
+
             LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
 
             int ignore = 0; // To deal with MCI_PLAY NULL while track is playing
@@ -522,10 +584,11 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             
             dprintf("  MCI_PLAY\r\n");
             
-            if (fdwCommand & MCI_NOTIFY)
+            if ((fdwCommand & MCI_NOTIFY) || sendStringNotify)
             {
                 dprintf("  MCI_NOTIFY\r\n");
                 notify = 1; /* storing the notify request */
+                sendStringNotify = 0;
             }
 
             if (fdwCommand & MCI_FROM)
@@ -760,7 +823,14 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, MAGIC_DEVICEID);
                 notify = 0;
             }
-            
+            if ((fdwCommand & MCI_NOTIFY) || sendStringNotify)
+            {
+                if (FullNotify && opened){
+                    dprintf("  MCI_NOTIFY\r\n");
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                }
+                sendStringNotify = 0;
+            }
         }
 
         if (uMsg == MCI_INFO)
@@ -780,6 +850,15 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 dprintf("    MCI_INFO_MEDIA_IDENTITY\n");
                 memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"ABCD1234", 9);
                 dprintf("        Return: %s\r\n", parms->lpstrReturn);
+            }
+            if (fdwCommand & MCI_NOTIFY)
+            {
+                if (FullNotify && opened){
+                    dprintf("  MCI_NOTIFY\r\n");
+                    notify = 0; 
+                    // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                }
             }
         }
 
@@ -972,6 +1051,15 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             dprintf("  dwReturn %d\n", parms->dwReturn);
 
+            if (fdwCommand & MCI_NOTIFY)
+            {
+                if (FullNotify && opened){
+                    dprintf("  MCI_NOTIFY\r\n");
+                    notify = 0; 
+                    // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+                }
+            }
         }
 
         return 0;
@@ -1002,7 +1090,12 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     // handle info
     sprintf(cmp_str, "info %s", alias_s);
     if (strstr(cmdbuf, cmp_str))
-    {    
+    {
+        if ((strstr(cmdbuf, "notify")) && FullNotify && opened){
+            dprintf("  MCI_NOTIFY\r\n");
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            notify = 0;
+        }
         if (strstr(cmdbuf, "identity"))
         {
             dprintf("  Returning identity: 1\r\n");
@@ -1022,6 +1115,11 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     sprintf(cmp_str, "capability %s", alias_s);
     if (strstr(cmdbuf, cmp_str))
     {
+        if ((strstr(cmdbuf, "notify")) && FullNotify && opened){
+            dprintf("  MCI_NOTIFY\r\n");
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            notify = 0;
+        }
         if (strstr(cmdbuf, "device type")){
             strcpy(ret, "cdaudio");
         }
@@ -1069,6 +1167,9 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     sprintf(cmp_str, "stop %s", alias_s);
     if (strstr(cmdbuf, cmp_str))
     {
+        if (strstr(cmdbuf, "notify")){
+            if(FullNotify && opened)sendStringNotify = 1; /* storing the notify request */
+        }
         fake_mciSendCommandA(MAGIC_DEVICEID, MCI_STOP, 0, (DWORD_PTR)NULL);
         return 0;
     }
@@ -1077,6 +1178,9 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     sprintf(cmp_str, "pause %s", alias_s);
     if (strstr(cmdbuf, cmp_str))
     {
+        if (strstr(cmdbuf, "notify")){
+            if(FullNotify && opened)sendStringNotify = 1; /* storing the notify request */
+        }
         fake_mciSendCommandA(MAGIC_DEVICEID, MCI_PAUSE, 0, (DWORD_PTR)NULL);
         return 0;
     }
@@ -1095,6 +1199,11 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             char devid_str[100];
             sprintf(devid_str, "%d", MAGIC_DEVICEID);
             strcpy(ret, devid_str);
+            if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
+                dprintf("  MCI_NOTIFY\r\n");
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            }
+            opened = 1;
             return 0;
         }
         /* Look for the use of an alias */
@@ -1110,6 +1219,11 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             char devid_str[100];
             sprintf(devid_str, "%d", MAGIC_DEVICEID);
             strcpy(ret, devid_str);
+            if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
+                dprintf("  MCI_NOTIFY\r\n");
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            }
+            opened = 1;
             return 0;
         }
         // Normal open cdaudio
@@ -1118,6 +1232,11 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             char devid_str[100];
             sprintf(devid_str, "%d", MAGIC_DEVICEID);
             strcpy(ret, devid_str);
+            if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
+                dprintf("  MCI_NOTIFY\r\n");
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            }
+            opened = 1;
             return 0;
         }
     }
@@ -1128,12 +1247,23 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     {
         sprintf(alias_s, "cdaudio");
         time_format = MCI_FORMAT_MSF; // reset time format
+        if ((strstr(cmdbuf, "notify")) && FullNotify && opened){
+            dprintf("  MCI_NOTIFY\r\n");
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            notify = 0;
+        }
+        opened = 0;
         return 0;
     }
 
     /* Handle "set cdaudio/alias" */
     sprintf(cmp_str, "set %s", alias_s);
     if (strstr(cmdbuf, cmp_str)){
+        if ((strstr(cmdbuf, "notify")) && FullNotify && opened){
+            dprintf("  MCI_NOTIFY\r\n");
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            notify = 0;
+        }
         if (strstr(cmdbuf, "milliseconds"))
         {
             static MCI_SET_PARMS parms;
@@ -1182,6 +1312,11 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     /* Handle "status cdaudio/alias" */
     sprintf(cmp_str, "status %s", alias_s);
     if (strstr(cmdbuf, cmp_str)){
+        if ((strstr(cmdbuf, "notify")) && FullNotify && opened){
+            dprintf("  MCI_NOTIFY\r\n");
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
+            notify = 0;
+        }
         if (strstr(cmdbuf, "time format"))
         {
             if(time_format==MCI_FORMAT_MILLISECONDS){
@@ -1320,6 +1455,9 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     // Handle Seek cdaudio
     sprintf(cmp_str, "seek %s", alias_s);
     if (strstr(cmdbuf, cmp_str)){
+        if (strstr(cmdbuf, "notify")){
+            if(FullNotify && opened)sendStringNotify = 1; /* storing the notify request */
+        }
         if (strstr(cmdbuf, "to start")){
             fake_mciSendCommandA(MAGIC_DEVICEID, MCI_SEEK, MCI_SEEK_TO_START, (DWORD_PTR)NULL);
             return 0;
@@ -1408,7 +1546,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
     sprintf(cmp_str, "play %s", alias_s);
     if (strstr(cmdbuf, cmp_str)){
         if (strstr(cmdbuf, "notify")){
-        notify = 1; /* storing the notify request */
+        sendStringNotify = 1; /* storing the notify request */
         }
         if(time_format == MCI_FORMAT_MSF){
             int from_sec = -1, to_sec = -1; // seconds
