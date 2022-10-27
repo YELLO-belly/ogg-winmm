@@ -1092,7 +1092,9 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             {
                 sprintf(alias_s, "%s", tmp_s +1);
             }
-            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
+            char devid_str[100];
+            sprintf(devid_str, "%d", MAGIC_DEVICEID);
+            strcpy(ret, devid_str);
             return 0;
         }
         /* Look for the use of an alias */
@@ -1105,13 +1107,17 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
                 sprintf(alias_s, "%s", tmp_s +1);
                 dprintf("alias is: %s\n",alias_s);
             }
-            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
+            char devid_str[100];
+            sprintf(devid_str, "%d", MAGIC_DEVICEID);
+            strcpy(ret, devid_str);
             return 0;
         }
         // Normal open cdaudio
         if (strstr(cmdbuf, "open cdaudio"))
         {
-            fake_mciSendCommandA(MAGIC_DEVICEID, MCI_OPEN, 0, (DWORD_PTR)NULL);
+            char devid_str[100];
+            sprintf(devid_str, "%d", MAGIC_DEVICEID);
+            strcpy(ret, devid_str);
             return 0;
         }
     }
