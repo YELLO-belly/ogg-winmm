@@ -595,7 +595,6 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             {
                 dprintf("    dwFrom: %d\r\n", parms->dwFrom);
 
-                /* FIXME: rounding to nearest track */
                 if (time_format == MCI_FORMAT_TMSF)
                 {
                     info.first = MCI_TMSF_TRACK(parms->dwFrom);
@@ -980,7 +979,6 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     if (fdwCommand & MCI_TRACK)
                     {
                         if (time_format == MCI_FORMAT_MILLISECONDS)
-                            /* FIXME: implying milliseconds */
                             parms->dwReturn = tracks[parms->dwTrack].position * 1000;
                         else if (time_format == MCI_FORMAT_MSF)
                             parms->dwReturn = MCI_MAKE_MSF(tracks[parms->dwTrack].position / 60, tracks[parms->dwTrack].position % 60, 0);
@@ -1040,7 +1038,6 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 {
                     dprintf("      MCI_STATUS_START\r\n");
                     if (time_format == MCI_FORMAT_MILLISECONDS)
-                        /* FIXME: implying milliseconds */
                         parms->dwReturn = tracks[firstTrack].position * 1000;
                     else if (time_format == MCI_FORMAT_MSF)
                         parms->dwReturn = MCI_MAKE_MSF(tracks[firstTrack].position / 60, tracks[parms->dwTrack].position % 60, 0);
