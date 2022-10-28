@@ -1,5 +1,18 @@
 # ogg-winmm CD Audio Emulator (2022 revision)
 
+v.2.2.0.3
+- New winmm.ini option "FullNotify" to enable the handling of notify success messages for all MCI commands. This is disabled by default because most games do not need it and also because our emulation is always sending the message to the topmost window (HWND)0xffff which might not be ideal in some situations.
+- MCI_GETDEVCAPS improvements
+- Some fixes to MciSendString "open" and alias handling
+- MCI_SYSINFO fixes
+- MCI_CLOSE now resets time format to MSF
+- Handle MCI_SET_AUDIO
+- Handle MCI_PLAY NULL & MCI_TO while playing
+- MCI_NOTIFY_ABORTED for MCI_SEEK
+- Fix MciSendString open command returned device id
+
+The cdaudio emulation should be fairly complete now. Though there is always the possibility that some game is looking for a specific return value that has been missed. In addition if a program uses invalid commands the emulator does not enforce the MCI ERROR code rules. However in terms of MCI commands and Notify messages this version should be fairly close to the real winmm behaviour following the working win9x/winXP implementation as a template.
+
 v.2.2.0.2
 - Improved play logic with proper resume from a MCI_STOP/MCI_PAUSE as per win9x behaviour.  
   <sub>Tools used for win9x testing: https://github.com/YELLO-belly/mciSendCmd-CDDA-tester</sub>
