@@ -1,3 +1,5 @@
+## On Windows 10 (and 11?) whenever certain ACT compatibility fixes are enabled for the game the wrapper may get ignored. One possible way to fix this is to rename the game executable.
+
 # ogg-winmm CD Audio Emulator (2022 revision)
 
 v.2.2.0.3
