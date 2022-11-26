@@ -1,6 +1,6 @@
 ## On Windows 10 (and 11?) whenever certain ACT compatibility fixes are enabled for the game the wrapper may get ignored. One possible way to fix this is to rename the game executable.  
 
-##There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
+## There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
 See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script
 
 # ogg-winmm CD Audio Emulator (2022 revision)
