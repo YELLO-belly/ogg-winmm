@@ -2,6 +2,8 @@
 
 ## There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
 See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script
+or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-loading.ps1  
+<sub>(right click on link and choose save link as...)</sub>
 
 # ogg-winmm CD Audio Emulator (2022 revision)
 
