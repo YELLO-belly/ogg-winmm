@@ -1,7 +1,7 @@
 ## On Windows 10 (and 11?) whenever certain ACT compatibility fixes are enabled for the game the wrapper may get ignored. One possible way to fix this is to rename the game executable.  
 
 ## There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
-See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script
+See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script  
 or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-loading.ps1  
 <sub>(right click on link and choose save link as...)</sub>
 
