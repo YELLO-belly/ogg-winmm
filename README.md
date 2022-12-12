@@ -7,8 +7,8 @@ or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-lo
 
 # ogg-winmm CD Audio Emulator (2022 revision)
 
-v.2.2.0.4  
-The use alternate MCI device ID option now only changes the ID for the Notify message that is sent to the topmost window. This seems to be enough and should avoid any device id conflicts when the game tries to play for example a movie using id 1.  
+v.2.2.0.4
+- The use alternate MCI device ID option now only changes the ID for the Notify message that is sent to the topmost window. This seems to be enough and should avoid any device id conflicts when the game tries to play for example a movie using id 1.  
 
 Games that I have currently tested to need device ID 1 for notify messages to be caught (e.g. track repeat):  
 - Incoming (1998, Rage Software)
