@@ -27,7 +27,6 @@
 MCIERROR WINAPI relay_mciSendCommandA(MCIDEVICEID a0, UINT a1, DWORD a2, DWORD a3);
 MCIERROR WINAPI relay_mciSendStringA(LPCSTR a0, LPSTR a1, UINT a2, HWND a3);
 
-int NOTIFY_DEVICEID = 48879;
 int MAGIC_DEVICEID = 48879; /* 48879 = 0xBEEF */
 #define MAX_TRACKS 99
 
@@ -105,7 +104,7 @@ int player_main(struct play_info *info)
                 if(notify){
                     notify = 0;
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                 }
                 return 0;
             }
@@ -128,7 +127,7 @@ int player_main(struct play_info *info)
     {
         notify = 0;
         dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
         /* NOTE: Notify message after successful playback is not working in Vista+.
         MCI_STATUS_MODE does not update to show that the track is no longer playing.
         Bug or broken design in mcicda.dll (also noted by the Wine team) */
@@ -151,7 +150,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         InitializeCriticalSection(&cs);
 
         int bMCIDevID = GetPrivateProfileInt("winmm", "MCIDevID", 0, ".\\winmm.ini");
-        if(bMCIDevID) NOTIFY_DEVICEID = 1; /* 48879 = 0xBEEF */
+        if(bMCIDevID) MAGIC_DEVICEID = 1; /* 48879 = 0xBEEF */
         int bACCSeekOFF = GetPrivateProfileInt("winmm", "ACCSeekOFF", 0, ".\\winmm.ini");
         if(bACCSeekOFF) ACCSeekOFF = 1;
         int bFullNotify = GetPrivateProfileInt("winmm", "FullNotify", 0, ".\\winmm.ini");
@@ -250,7 +249,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     if (FullNotify && !opened){
                         dprintf("  MCI_NOTIFY\r\n");
                         dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                         Sleep(50);
                     }
                 }
@@ -274,7 +273,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     if (FullNotify && !opened){
                         dprintf("  MCI_NOTIFY\r\n");
                         dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                        SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                         Sleep(50);
                     }
                 }
@@ -325,7 +324,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     notify = 0;
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
                     // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                     Sleep(50);
                 }
             }
@@ -402,7 +401,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     notify = 0;
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
                     // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                     Sleep(50);
                 }
             }
@@ -415,7 +414,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             if(notify){
                 notify = 0;
                 dprintf("  Sending MCI_NOTIFY_ABORTED message...\r\n");
-                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, NOTIFY_DEVICEID);
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, MAGIC_DEVICEID);
             }
         
             LPMCI_SEEK_PARMS parms = (LPVOID)dwParam;
@@ -552,7 +551,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (FullNotify && opened){
                     dprintf("  MCI_NOTIFY\r\n");
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                     Sleep(50);
                 }
             }
@@ -568,7 +567,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     notify = 0;
                     dprintf("  MCI_NOTIFY\r\n");
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                     Sleep(50);
                 }
             }
@@ -584,7 +583,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             if(notify){
                 notify = 0;
                 dprintf("  Sending MCI_NOTIFY_ABORTED message...\r\n");
-                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, NOTIFY_DEVICEID);
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, MAGIC_DEVICEID);
             }
 
             LPMCI_PLAY_PARMS parms = (LPVOID)dwParam;
@@ -833,7 +832,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             if(notify){
                 notify = 0;
                 dprintf("  Sending MCI_NOTIFY_ABORTED message...\r\n");
-                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, NOTIFY_DEVICEID);
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_ABORTED, MAGIC_DEVICEID);
             }
             if ((fdwCommand & MCI_NOTIFY) || sendStringNotify)
             {
@@ -841,7 +840,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 if (FullNotify && opened){
                     dprintf("  MCI_NOTIFY\r\n");
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                     Sleep(50);
                 }
             }
@@ -872,7 +871,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     notify = 0;
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
                     // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                     Sleep(50);
                 }
             }
@@ -1072,7 +1071,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     notify = 0;
                     dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
                     // Note that MCI_NOTIFY_SUPERSEDED would be sent before MCI_NOTIFY_SUCCESSFUL if track was playing, but this is not emulated.
-                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                    SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                     Sleep(50);
                 }
             }
@@ -1111,7 +1110,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             notify = 0;
             dprintf("  MCI_NOTIFY\r\n");
             dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
             Sleep(50);
         }
         if (strstr(cmdbuf, "identity"))
@@ -1137,7 +1136,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             notify = 0;
             dprintf("  MCI_NOTIFY\r\n");
             dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
             Sleep(50);
         }
         if (strstr(cmdbuf, "device type")){
@@ -1222,7 +1221,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                 Sleep(50);
             }
             opened = 1;
@@ -1244,7 +1243,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                 Sleep(50);
             }
             opened = 1;
@@ -1259,7 +1258,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+                SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
                 Sleep(50);
             }
             opened = 1;
@@ -1277,7 +1276,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             notify = 0;
             dprintf("  MCI_NOTIFY\r\n");
             dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
             Sleep(50);
         }
         opened = 0;
@@ -1291,7 +1290,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             notify = 0;
             dprintf("  MCI_NOTIFY\r\n");
             dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
             Sleep(50);
         }
         if (strstr(cmdbuf, "milliseconds"))
@@ -1346,7 +1345,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             notify = 0;
             dprintf("  MCI_NOTIFY\r\n");
             dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
-            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, NOTIFY_DEVICEID);
+            SendMessageA((HWND)0xffff, MM_MCINOTIFY, MCI_NOTIFY_SUCCESSFUL, MAGIC_DEVICEID);
             Sleep(50);
         }
         if (strstr(cmdbuf, "time format"))
