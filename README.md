@@ -7,14 +7,6 @@ or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-lo
 
 # ogg-winmm CD Audio Emulator (2022 revision)
 
-v.2.2.0.4
-- The use alternate MCI device ID option now only changes the ID for the Notify message that is sent to the topmost window. This seems to be enough and should avoid any device id conflicts when the game tries to play for example a movie using id 1.  
-
-Games that I have currently tested to need device ID 1 for notify messages to be caught (e.g. track repeat):  
-- Incoming (1998, Rage Software)
-- Wipeout (1996, ATI 3D Rage version through the glrage wrapper)
-
-
 v.2.2.0.3
 - New winmm.ini option "FullNotify" to enable the handling of notify success messages for all MCI commands. This is disabled by default because most games do not need it and also because our emulation is always sending the message to the topmost window (HWND)0xffff which might not be ideal in some situations.
 - MCI_GETDEVCAPS improvements
