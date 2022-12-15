@@ -30,6 +30,8 @@ MCIERROR WINAPI relay_mciSendStringA(LPCSTR a0, LPSTR a1, UINT a2, HWND a3);
 int MAGIC_DEVICEID = 48879; /* 48879 = 0xBEEF */
 #define MAX_TRACKS 99
 
+MCI_OPEN_PARMS mciOpenParms;
+
 struct track_info
 {
     char path[MAX_PATH];    /* full path to ogg */
@@ -150,7 +152,20 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         InitializeCriticalSection(&cs);
 
         int bMCIDevID = GetPrivateProfileInt("winmm", "MCIDevID", 0, ".\\winmm.ini");
-        if(bMCIDevID) MAGIC_DEVICEID = 1; /* 48879 = 0xBEEF */
+        if(bMCIDevID){
+            mciOpenParms.lpstrDeviceType = "waveaudio";
+            int MCIERRret = 0;
+            if (MCIERRret = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(LPVOID) &mciOpenParms)){
+                // Failed to open wave device.
+                MAGIC_DEVICEID = 48879;
+                dprintf("Failed to open wave device! Using 0xBEEF as cdaudio id.\r\n");
+            }
+            else{
+                MAGIC_DEVICEID = mciOpenParms.wDeviceID;
+                dprintf("Wave device opened succesfully using cdaudio ID %d for emulation.\r\n",MAGIC_DEVICEID);
+            }
+        }
+
         int bACCSeekOFF = GetPrivateProfileInt("winmm", "ACCSeekOFF", 0, ".\\winmm.ini");
         if(bACCSeekOFF) ACCSeekOFF = 1;
         int bFullNotify = GetPrivateProfileInt("winmm", "FullNotify", 0, ".\\winmm.ini");
