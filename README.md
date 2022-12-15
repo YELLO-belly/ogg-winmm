@@ -7,6 +7,10 @@ or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-lo
 
 # ogg-winmm CD Audio Emulator (2022 revision)
 
+v.2.2.0.4 (second attempt)
+- Specifying MCIDevID = 1 in winmm.ini now opens a waveaudio device to lock a real MCI device ID for use with the cdaudio emulator (similar to what Dxwnd does). This should please all games but the old imaginary 0xBEEF ID is still left as the default behaviour just in case opening of the waveaudio device fails or MCIDevID is not set.
+
+
 v.2.2.0.3
 - New winmm.ini option "FullNotify" to enable the handling of notify success messages for all MCI commands. This is disabled by default because most games do not need it and also because our emulation is always sending the message to the topmost window (HWND)0xffff which might not be ideal in some situations.
 - MCI_GETDEVCAPS improvements
