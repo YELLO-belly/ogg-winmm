@@ -183,6 +183,8 @@ int plr_pump()
                     "MCIDevID = 0\n\n"
                     "# Disable accurate seek:\n"
                     "ACCSeekOFF = 0\n\n"
+                    "# Enable full notify msg support:\n"
+                    "FullNotify = 0\n\n"
                     "# Enable debug log:\n"
                     "Log = 0", ogg_winmm_vol);
         fclose(fp);
