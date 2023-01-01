@@ -1,3 +1,9 @@
+# What is it?
+
+ogg-winmm is a CD-audio emulator implemented using a winmm.dll wrapper file. It is useful for old games that used cdaudio tracks for music playback. The wrapper allows music to be played from the hard drive instead of the CD. It is also useful in fixing various issues that the mcicda driver has starting with Windows Vista. This includes broken track repeats and various other smaller issues.  
+
+<sub>There is also the [cdaudio-winmm](https://github.com/YELLO-belly/cdaudio-winmm) project which concentrates on only fixing the various mcicda issues while still maintaining playback from the CD:<sub>
+
 # Usage:
 
 Place the *winmm.dll* in the main game folder. (Do not put it into a system folder it is just a wrapper!)
