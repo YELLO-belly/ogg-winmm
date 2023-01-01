@@ -7,7 +7,12 @@ Place the .ogg music files in a "Music" sub-folder with the following naming con
 Note that numbering usually starts at 02 since the first track is a data track on mixed mode CD's.
 However some games may use a pure music CD with no data tracks in which case you should start numbering from Track01.ogg ...
 
-Music volume can be adjusted by editing winmm.ini and changing the value between 0 - 100. Useful when the games internal music slider does not function properly.
+Winmm.ini options:
+- Music volume can be adjusted by changing the value between 0 - 100. Useful when the games internal music slider does not function properly.
+- **MCIDevID = 0** Set this to 1 to enable more accurate MCI device enumeration. Some games will not repeat music tracks without setting this.
+- **ACCSeekOFF = 0** Set this to 1 to disable accurate seeking of music tracks. This will disable the new track seeking code and use the older less accurate method of simply playing single tracks instead of being able to seek to a specific position.
+- **FullNotify = 0** Set this to 1 to try and simulate MCI notify messages more accurately. Some games might need this option to play cdaudio.
+- **Log = 0** Set this to 1 to write winmm.log files in the game folder. Log files may be helpful in troubleshooting.
 
 TIP: You can rip the music from your game CD using Windows Media Player as .wav files ```format WAV (lossless)``` and then convert them to .ogg using oggenc2 from:
 https://rarewares.org/ogg-oggenc.php
