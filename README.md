@@ -21,7 +21,7 @@ https://rarewares.org/ogg-oggenc.php
 
 The cmd prompt command:
 ```for %%a in (*.wav) do oggenc2 "%%a"```
-converts all .wav files into .ogg format. (track names must not contain spaces!) You can put this command into a .bat or .cmd file in the same folder with oggenc2 and the wav files. Then run the batch file and it should encode all the wave files into ogg format.
+converts all .wav files into .ogg format. You can put this command into a .bat or .cmd file in the same folder with oggenc2 and the wav files. Then run the batch file and it should encode all the wave files into ogg format.
 
 Extra note:
 - Apparently on some machines the local winmm.dll wrapper is ignored and the real system dll is used instead. This may be because some other program has already loaded the winmm.dll library or some system setting forces the use of the real dll. The wrapper can be forced to load by renaming it to for example to winm2.dll and hex editing the program executable to point to this renamed winmm.dll instead.
