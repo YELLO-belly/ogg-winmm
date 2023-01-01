@@ -1,10 +1,3 @@
-## On Windows 10 (and 11?) whenever certain ACT compatibility fixes are enabled for the game the wrapper may get ignored. One possible way to fix this is to rename the game executable.  
-
-## There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
-See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script  
-or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-loading.ps1  
-<sub>(right click on link and choose save link as...)</sub>
-
 # Usage:
 
 Place the *winmm.dll* in the main game folder. (Do not put it into a system folder it is just a wrapper!)
@@ -25,6 +18,10 @@ converts all .wav files into .ogg format. You can put this command into a .bat o
 
 Extra note:
 - Apparently on some machines the local winmm.dll wrapper is ignored and the real system dll is used instead. This may be because some other program has already loaded the winmm.dll library or some system setting forces the use of the real dll. The wrapper can be forced to load by renaming it to for example to winm2.dll and hex editing the program executable to point to this renamed winmm.dll instead.
+- There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
+See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script  
+or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-loading.ps1  
+<sub>(right click on link and choose save link as...)</sub>
 
 # ogg-winmm CD Audio Emulator (2022 revision)
 
