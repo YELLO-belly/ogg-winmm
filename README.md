@@ -54,7 +54,7 @@ TIP: You can rip the music from your game CD using Windows Media Player as .wav 
 https://rarewares.org/ogg-oggenc.php
 
 The cmd prompt command:
-***for %%a in (*.wav) do oggenc2 "%%a"***
+```for %%a in (*.wav) do oggenc2 "%%a"```
 converts all .wav files into .ogg format. (track names must not contain spaces!)
 
 Extra note:
