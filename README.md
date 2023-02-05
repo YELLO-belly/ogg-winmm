@@ -27,7 +27,7 @@ The cmd prompt command:
 ```for %%a in (*.wav) do oggenc2 "%%a"```
 converts all .wav files into .ogg format. You can put this command into a .bat or .cmd file in the same folder with oggenc2 and the wav files. Then run the batch file and it should encode all the wave files into ogg format.
 
-**Alternatively you can use the Audacity program with batch conversion:**
+**Alternatively you can use the Audacity program with batch conversion:**  
 File->Edit Chains...  
 
 From the left side choose  
