@@ -121,7 +121,8 @@ Based on the original "hifi" release of ogg-winmm with the following changes:
 - MCI send string implementation of aliases.
 
 TODO:
-- Try to closer match the excellent cdaudio emulation of DxWnd and it's stand alone [CDAudio proxy.](https://sourceforge.net/projects/cdaudio-proxy/)
+- ~~Try to closer match the excellent cdaudio emulation of DxWnd and it's stand alone [CDAudio proxy.](https://sourceforge.net/projects/cdaudio-proxy/)~~ (atchieved?)
+- Add support for FLAC and possibly other audio formats in player.c
 
 # Building:
 
