@@ -19,15 +19,20 @@ Winmm.ini options:
 - **ACCSeekOFF = 0** Set this to 1 to disable accurate seeking of music tracks. This will disable the new track seeking code and use the older less accurate method of simply playing single tracks instead of being able to seek to a specific position.
 - **FullNotify = 0** Set this to 1 to try and simulate MCI notify messages more accurately. Some games might need this option to play cdaudio.
 - **Log = 0** Set this to 1 to write winmm.log files in the game folder. Log files may be helpful in troubleshooting.
+  
+# How to rip music from a CD and convert it to the .ogg file format:
 
-TIP: You can rip the music from your game CD using Windows Media Player as .wav files ```format WAV (lossless)``` and then convert them to .ogg using oggenc2 from:
+There is a program called [fre:ac](https://github.com/enzo1982/freac) which should be able to both rip and convert the music into .ogg files.  
+
+You can also rip the music from your game CD using Windows Media Player as .wav files ```format WAV (lossless)``` and then convert them to .ogg using oggenc2 from:
 https://rarewares.org/ogg-oggenc.php
+(Note: The new Media Player on Windows 11 seems to no longer support ripping to .wav files...)
 
 The cmd prompt command:
 ```for %%a in (*.wav) do oggenc2 "%%a"```
 converts all .wav files into .ogg format. You can put this command into a .bat or .cmd file in the same folder with oggenc2 and the wav files. Then run the batch file and it should encode all the wave files into ogg format.
 
-**Alternatively you can use the Audacity program with batch conversion:**  
+**Alternatively you can use the Audacity program with batch conversion for wav to ogg converison:**  
 File->Edit Chains...  
 
 From the left side choose  
@@ -42,7 +47,7 @@ Then click on "Apply to Files..." navigating and choosing all the files you want
 Audacity should then convert all the files that were selected into the ogg format.  
 
 
-Extra note:
+# Extra note:
 - Apparently on some machines the local winmm.dll wrapper is ignored and the real system dll is used instead. This may be because some other program has already loaded the winmm.dll library or some system setting forces the use of the real dll. The wrapper can be forced to load by renaming it to for example to winm2.dll and hex editing the program executable to point to this renamed winmm.dll instead.
 - There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
 See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script  
@@ -120,9 +125,9 @@ Based on the original "hifi" release of ogg-winmm with the following changes:
 - Accounted for the possibility of pure music cd's.
 - MCI send string implementation of aliases.
 
-TODO:
+# TODO:
 - ~~Try to closer match the excellent cdaudio emulation of DxWnd and it's stand alone [CDAudio proxy.](https://sourceforge.net/projects/cdaudio-proxy/)~~ (achieved?)
-- Add support for FLAC and possibly other audio formats in player.c
+- Add support for FLAC and possibly other audio formats in player.c (https://github.com/mackron/dr_libs)
 
 # Building:
 
