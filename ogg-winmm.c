@@ -279,7 +279,16 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             dprintf("    MCI_OPEN_TYPE\r\n");
             dprintf("        -> %s\r\n", parms->lpstrDeviceType);
 
-            if (strcmp(parms->lpstrDeviceType, "cdaudio") == 0)
+            /* copy alias to buffer */
+            char cmpaliasbuf[1024];
+            strcpy (cmpaliasbuf,parms->lpstrDeviceType);
+            /* change cmpaliasbuf into lower case */
+            for (int i = 0; cmpaliasbuf[i]; i++)
+            {
+                cmpaliasbuf[i] = tolower(cmpaliasbuf[i]);
+            }
+
+            if (strcmp(cmpaliasbuf, "cdaudio") == 0)
             {
                 dprintf("  Returning magic device id for MCI_DEVTYPE_CD_AUDIO\r\n");
                 parms->wDeviceID = MAGIC_DEVICEID;
