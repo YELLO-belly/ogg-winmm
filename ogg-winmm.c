@@ -887,7 +887,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
             if(fdwCommand & MCI_INFO_MEDIA_IDENTITY)
             {
                 dprintf("    MCI_INFO_MEDIA_IDENTITY\n");
-                memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"ABCD1234", 9);
+                memcpy((LPVOID)(parms->lpstrReturn), (LPVOID)&"12345678", 9);
                 dprintf("        Return: %s\r\n", parms->lpstrReturn);
             }
             if (fdwCommand & MCI_NOTIFY)
@@ -1141,14 +1141,14 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         }
         if (strstr(cmdbuf, "identity"))
         {
-            dprintf("  Returning identity: 1\r\n");
-            strcpy(ret, "ABCD1234");
+            dprintf("  Returning identity: 12345678\r\n");
+            strcpy(ret, "12345678");
             return 0;
         }
 
         if (strstr(cmdbuf, "product"))
         {
-            dprintf("  Returning product: 1\r\n");
+            dprintf("  Returning product: CD Audio\r\n");
             strcpy(ret, "CD Audio");
             return 0;
         }
