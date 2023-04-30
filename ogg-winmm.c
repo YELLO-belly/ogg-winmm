@@ -838,7 +838,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                 }
 
                 playing = 1;
-                player = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
+                player = CreateThread(NULL, 100000, (LPTHREAD_START_ROUTINE)player_main, (void *)&info, 0, NULL);
             }
 
         }
