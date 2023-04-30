@@ -1236,14 +1236,40 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         /* Example: "open d: type cdaudio alias cd1" */
         if (strstr(cmdbuf, "type cdaudio alias"))
         {
+	        //Remove wait from the string
+			if (strstr(cmdbuf, "wait")){
+				
+				char word[20] = " wait";
+				int i, j, len_str, len_word, temp, chk=0;
+				
+				len_str = strlen(cmdbuf);
+				len_word = strlen(word);
+				for(i=0; i<len_str; i++){
+					temp = i;
+					for(j=0; j<len_word; j++){
+						if(cmdbuf[i]==word[j])
+						i++;
+					}
+					chk = i-temp;
+					if(chk==len_word){
+						i = temp;
+						for(j=i; j<(len_str-len_word); j++)
+						cmdbuf[j] = cmdbuf[j+len_word];
+						len_str = len_str-len_word;
+						cmdbuf[j]='\0';
+					}
+				}
+			}
+	        
             char *tmp_s = strrchr(cmdbuf, ' ');
             if (tmp_s && *(tmp_s +1))
             {
                 sprintf(alias_s, "%s", tmp_s +1);
+                dprintf("alias is: %s\n",alias_s);
             }
-            char devid_str[100];
-            sprintf(devid_str, "%d", MAGIC_DEVICEID);
-            strcpy(ret, devid_str);
+            //char devid_str[100];
+            //sprintf(devid_str, "%d", MAGIC_DEVICEID);
+            //strcpy(ret, devid_str);
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
@@ -1257,15 +1283,40 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         /* Example: "open cdaudio alias cd1" */
         if (strstr(cmdbuf, "open cdaudio alias"))
         {
+	        //Remove wait from the string
+			if (strstr(cmdbuf, "wait")){
+				
+				char word[20] = " wait";
+				int i, j, len_str, len_word, temp, chk=0;
+				
+				len_str = strlen(cmdbuf);
+				len_word = strlen(word);
+				for(i=0; i<len_str; i++){
+					temp = i;
+					for(j=0; j<len_word; j++){
+						if(cmdbuf[i]==word[j])
+						i++;
+					}
+					chk = i-temp;
+					if(chk==len_word){
+						i = temp;
+						for(j=i; j<(len_str-len_word); j++)
+						cmdbuf[j] = cmdbuf[j+len_word];
+						len_str = len_str-len_word;
+						cmdbuf[j]='\0';
+					}
+				}
+			}
+	        
             char *tmp_s = strrchr(cmdbuf, ' ');
             if (tmp_s && *(tmp_s +1))
             {
                 sprintf(alias_s, "%s", tmp_s +1);
                 dprintf("alias is: %s\n",alias_s);
             }
-            char devid_str[100];
-            sprintf(devid_str, "%d", MAGIC_DEVICEID);
-            strcpy(ret, devid_str);
+            //char devid_str[100];
+            //sprintf(devid_str, "%d", MAGIC_DEVICEID);
+            //strcpy(ret, devid_str);
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
@@ -1278,9 +1329,9 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         // Normal open cdaudio
         if (strstr(cmdbuf, "open cdaudio"))
         {
-            char devid_str[100];
-            sprintf(devid_str, "%d", MAGIC_DEVICEID);
-            strcpy(ret, devid_str);
+            //char devid_str[100];
+            //sprintf(devid_str, "%d", MAGIC_DEVICEID);
+            //strcpy(ret, devid_str);
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
