@@ -716,8 +716,10 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
                     }
                 }
 
-                if (info.first < firstTrack)
-                    info.first = firstTrack;
+                if (info.first < firstTrack){
+                    if (info.first == 0)return MCIERR_OUTOFRANGE; //Hunter Hunted tries to play from track 0 and expects a failure as would happen with a real mcicda device.
+                    else info.first = firstTrack;
+                }
 
                 if (info.first > lastTrack)
                     info.first = lastTrack;
