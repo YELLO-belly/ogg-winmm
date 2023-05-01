@@ -56,8 +56,14 @@ or: https://github.com/YELLO-belly/ogg-winmm/raw/master/PS-Script/force-winmm-lo
 
 # ogg-winmm CD Audio Emulator (2023 revision)
 
+v.2.2.0.6
+- mciSendString open device fixes. (trim "wait" to avoid using it as the alias and remove the devid from return.)
+- Change CD identity to be numeric instead of alphanumeric.
+- CreateThread using a fixed stack size.
+- Do not attempt to play from track 0.
+
 v.2.2.0.5
-- Fix case sensitive mciSendCommand DeviceType. Some games can use CDAudio instead of cdaudio, etc... These would previously fails because the logic did not take this into account.
+- Fix case sensitive mciSendCommand DeviceType. Some games can use CDAudio instead of cdaudio, etc... These would previously fail because the logic did not take this into account.
 
 v.2.2.0.4 (second attempt)
 - Specifying MCIDevID = 1 in winmm.ini now opens a waveaudio device to lock a real MCI device ID for use with the cdaudio emulator (similar to what Dxwnd does). This should please all games but the old imaginary 0xBEEF ID is still left as the default behaviour just in case opening of the waveaudio device fails or MCIDevID is not set.
