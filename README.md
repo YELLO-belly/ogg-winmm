@@ -14,7 +14,7 @@ Note that numbering usually starts at 02 since the first track is a data track o
 However some games may use a pure music CD with no data tracks in which case you should start numbering from Track01.ogg ...
 
 Winmm.ini options:
-- Music volume can be adjusted by changing the value between 0 - 100. Useful when the games internal music slider does not function properly.
+- Music volume can be adjusted by changing the value between 0 - 100. Useful when the games internal music slider does not function properly. **NOTE:** When set to 100 the in-game music sliders can be used to adjust the volume (does not work with all games).
 - **MCIDevID = 0** Set this to 1 to enable more accurate MCI device enumeration. Some games will not repeat music tracks without setting this.
 - **ACCSeekOFF = 0** Set this to 1 to disable accurate seeking of music tracks. This will disable the new track seeking code and use the older less accurate method of simply playing single tracks instead of being able to seek to a specific position.
 - **FullNotify = 0** Set this to 1 to try and simulate MCI notify messages more accurately. Some games might need this option to play cdaudio.
