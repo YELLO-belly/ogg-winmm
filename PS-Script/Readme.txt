@@ -1,3 +1,6 @@
+On some systems the running of unsigned PowerShell scripts may be disabled. In this case you can try running the script with the command:
+"powershell -noprofile -executionpolicy bypass -file force-winmm-loading.ps1"
+
 Disclaimer:
 This PowerShell script edits binary files. Use it with caution and common sense!
 
