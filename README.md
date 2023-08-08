@@ -57,6 +57,10 @@ See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script
 
 # ogg-winmm CD Audio Emulator (2023 revision)
 
+v.2.2.0.7
+- Fixed a regression that could cause an error when loading the winmm wrapper on some systems. (DllMain function)
+- Some code cleanup.
+
 v.2.2.0.6
 - mciSendString open device fixes. (trim "wait" to avoid using it as the alias and remove the devid from return.)
 - Change CD identity to be numeric instead of alphanumeric.
