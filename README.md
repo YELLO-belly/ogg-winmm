@@ -48,8 +48,11 @@ Audacity should then convert all the files that were selected into the ogg forma
 
 
 # Extra note:
-- Apparently on some machines the local winmm.dll wrapper is ignored and the real system dll is used instead. This may be because some other program has already loaded the winmm.dll library or some system setting forces the use of the real dll. The wrapper can be forced to load by renaming it to for example to winm2.dll and hex editing the program executable to point to this renamed winmm.dll instead.
-- There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.  
+- Apparently on some machines the local winmm.dll wrapper is ignored and the real system dll is used instead. This may be because some other program has already loaded the winmm.dll library or some system setting forces the use of the real dll. (For example if the program has an ACT Database entry.) Some possible solutions:
+
+1. Easiest trick is to rename the game executable in order to disable any Microsoft ACT Fixes (or shims) that might prevent loading the warapper dll.
+
+2. The wrapper can also be forced to load by renaming it to for example to winm2.dll and hex editing the program executable to point to this renamed winmm.dll instead. There is now also a PowerShell script available in the sources to help alleviate issues where the wrapper is ignored by Windows.
 See: https://github.com/YELLO-belly/ogg-winmm/tree/master/PS-Script  
 
 # ogg-winmm CD Audio Emulator (2023 revision)
