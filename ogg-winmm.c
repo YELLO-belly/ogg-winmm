@@ -15,7 +15,7 @@
  */
 
 /* Code revised by DD (2020) (v.0.2.0.2) */
-// 2022 revisions by Y-B...
+// 2022 - 2023 revisions by Y-B.
 
 #include <windows.h>
 #include <stdio.h>
@@ -47,12 +47,8 @@ struct play_info
     int last;
 };
 
-#ifdef _DEBUG
-    #define dprintf(...) if (fh) { fprintf(fh, __VA_ARGS__); fflush(NULL); }
-    FILE *fh = NULL;
-#else
-    #define dprintf(...)
-#endif
+#define dprintf(...) if (fh) { fprintf(fh, __VA_ARGS__); fflush(NULL); }
+FILE *fh = NULL;
 
 int FullNotify = 0;
 int opened = 0;
@@ -66,12 +62,14 @@ int paused = 0;
 int notify = 0;
 int playing = 0;
 HANDLE player = NULL;
+HANDLE initialize = NULL;
+HINSTANCE hModule = 0;
+
 int firstTrack = -1;
 int lastTrack = 0;
 int numTracks = 1; /* +1 for data track on mixed mode cd's */
 char music_path[2048];
 int time_format = MCI_FORMAT_MSF;
-CRITICAL_SECTION cs;
 char alias_s[100] = "cdaudio";
 static struct play_info info = { -1, -1 };
 
@@ -137,91 +135,98 @@ int player_main(struct play_info *info)
     return 0;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+//Initialization thread:
+int initialize_main(void)
 {
-    if (fdwReason == DLL_PROCESS_ATTACH)
-    {
-#ifdef _DEBUG
-        int bLog = GetPrivateProfileInt("winmm", "Log", 0, ".\\winmm.ini");
-        if(bLog)fh = fopen("winmm.log", "w"); /* Renamed to .log*/
-#endif
-        GetModuleFileName(hinstDLL, music_path, sizeof music_path);
+    //Read winmm.ini options:
+    int bLog = GetPrivateProfileInt("winmm", "Log", 0, ".\\winmm.ini");
+    if(bLog)fh = fopen("winmm.log", "w"); // Renamed to .log
 
-        memset(tracks, 0, sizeof tracks);
-
-        InitializeCriticalSection(&cs);
-
-        int bMCIDevID = GetPrivateProfileInt("winmm", "MCIDevID", 0, ".\\winmm.ini");
-        if(bMCIDevID){
-            mciOpenParms.lpstrDeviceType = "waveaudio";
-            int MCIERRret = 0;
-            if (MCIERRret = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(LPVOID) &mciOpenParms)){
-                // Failed to open wave device.
-                MAGIC_DEVICEID = 48879;
-                dprintf("Failed to open wave device! Using 0xBEEF as cdaudio id.\r\n");
-            }
-            else{
-                MAGIC_DEVICEID = mciOpenParms.wDeviceID;
-                dprintf("Wave device opened succesfully using cdaudio ID %d for emulation.\r\n",MAGIC_DEVICEID);
-            }
+    int bMCIDevID = GetPrivateProfileInt("winmm", "MCIDevID", 0, ".\\winmm.ini");
+    if(bMCIDevID){
+        mciOpenParms.lpstrDeviceType = "waveaudio";
+        int MCIERRret = 0;
+        if (MCIERRret = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(LPVOID) &mciOpenParms)){
+            // Failed to open wave device.
+            MAGIC_DEVICEID = 48879;
+            dprintf("Failed to open wave device! Using 0xBEEF as cdaudio id.\r\n");
         }
-
-        int bACCSeekOFF = GetPrivateProfileInt("winmm", "ACCSeekOFF", 0, ".\\winmm.ini");
-        if(bACCSeekOFF) ACCSeekOFF = 1;
-        int bFullNotify = GetPrivateProfileInt("winmm", "FullNotify", 0, ".\\winmm.ini");
-        if(bFullNotify) FullNotify = 1;
-
-        char *last = strrchr(music_path, '\\');
-        if (last)
-        {
-            *last = '\0';
+        else{
+            MAGIC_DEVICEID = mciOpenParms.wDeviceID;
+            dprintf("Wave device opened succesfully using cdaudio ID %d for emulation.\r\n",MAGIC_DEVICEID);
         }
-        strncat(music_path, "\\MUSIC", sizeof music_path - 1);
-
-        dprintf("ogg-winmm music directory is %s\r\n", music_path);
-        dprintf("ogg-winmm searching tracks...\r\n");
-
-        unsigned int position = 0;
-
-        for (int i = 1; i < MAX_TRACKS; i++) /* "Changed: int i = 0" to "1" we can skip track00.ogg" */
-        {
-            snprintf(tracks[i].path, sizeof tracks[i].path, "%s\\Track%02d.ogg", music_path, i);
-            tracks[i].length = plr_length(tracks[i].path);
-            tracks[i].position = position + 2; //2 second pre-gap
-
-            if (tracks[i].length < 4)
-            {
-                tracks[i].path[0] = '\0';
-                //position += 4; /* missing tracks are 4 second data tracks for us */
-            }
-            else
-            {
-                if (firstTrack == -1)
-                {
-                    firstTrack = i;
-                }
-                if(i == numTracks) numTracks -= 1; /* Take into account pure music cd's starting with track01.ogg */
-
-                dprintf("Track %02d: %02d:%02d @ %d seconds\r\n", i, tracks[i].length / 60, tracks[i].length % 60, tracks[i].position);
-                numTracks++;
-                lastTrack = i;
-                position += tracks[i].length;
-            }
-        }
-
-        dprintf("Emulating total of %d CD tracks.\r\n\r\n", numTracks);
     }
 
-#ifdef _DEBUG
-    if (fdwReason == DLL_PROCESS_DETACH)
+    int bACCSeekOFF = GetPrivateProfileInt("winmm", "ACCSeekOFF", 0, ".\\winmm.ini");
+    if(bACCSeekOFF) ACCSeekOFF = 1;
+
+    int bFullNotify = GetPrivateProfileInt("winmm", "FullNotify", 0, ".\\winmm.ini");
+    if(bFullNotify) FullNotify = 1;
+    //End of read winmm.ini options...
+    
+    //Do the other stuff:
+    GetModuleFileName(hModule, music_path, sizeof music_path);
+    memset(tracks, 0, sizeof tracks);
+
+    char *last = strrchr(music_path, '\\');
+    if (last)
     {
+        *last = '\0';
+    }
+    strncat(music_path, "\\MUSIC", sizeof music_path - 1);
+
+    dprintf("ogg-winmm music directory is %s\r\n", music_path);
+    dprintf("ogg-winmm searching tracks...\r\n");
+
+    unsigned int position = 0;
+
+    for (int i = 1; i < MAX_TRACKS; i++) /* "Changed: int i = 0" to "1" we can skip track00.ogg" */
+    {
+        snprintf(tracks[i].path, sizeof tracks[i].path, "%s\\Track%02d.ogg", music_path, i);
+        tracks[i].length = plr_length(tracks[i].path);
+        tracks[i].position = position + 2; //2 second pre-gap
+
+        if (tracks[i].length < 4)
+        {
+            tracks[i].path[0] = '\0';
+            //position += 4; /* missing tracks are 4 second data tracks for us */
+        }
+        else
+        {
+            if (firstTrack == -1)
+            {
+                firstTrack = i;
+            }
+            if(i == numTracks) numTracks -= 1; /* Take into account pure music cd's starting with track01.ogg */
+
+            dprintf("Track %02d: %02d:%02d @ %d seconds\r\n", i, tracks[i].length / 60, tracks[i].length % 60, tracks[i].position);
+            numTracks++;
+            lastTrack = i;
+            position += tracks[i].length;
+        }
+    }
+
+    dprintf("Emulating total of %d CD tracks.\r\n\r\n", numTracks);
+    return 0;
+}
+
+// The less done inside DllMain the better...
+// https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-best-practices
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    if (fdwReason == DLL_PROCESS_ATTACH){
+        hModule = hinstDLL;
+        //Moved initialization stuff to its own thread to avoid issues...
+        initialize = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)initialize_main, NULL, 0, NULL);
+    }
+
+    if (fdwReason == DLL_PROCESS_DETACH){
         if (fh)
         {
             fclose(fh);
             fh = NULL;
         }
     }
-#endif
 
     return TRUE;
 }
@@ -257,7 +262,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (LOWORD(parms->lpstrDeviceType) == MCI_DEVTYPE_CD_AUDIO)
             {
-                dprintf("  Returning magic device id for MCI_DEVTYPE_CD_AUDIO\r\n");
+                dprintf("  Returning magic device id %d for MCI_DEVTYPE_CD_AUDIO\r\n", MAGIC_DEVICEID);
                 parms->wDeviceID = MAGIC_DEVICEID;
                 if (fdwCommand & MCI_NOTIFY)
                 {
@@ -290,7 +295,7 @@ MCIERROR WINAPI fake_mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD_PTR 
 
             if (strcmp(cmpaliasbuf, "cdaudio") == 0)
             {
-                dprintf("  Returning magic device id for MCI_DEVTYPE_CD_AUDIO\r\n");
+                dprintf("  Returning magic device id %d for MCI_DEVTYPE_CD_AUDIO\r\n", MAGIC_DEVICEID);
                 parms->wDeviceID = MAGIC_DEVICEID;
                 if (fdwCommand & MCI_NOTIFY)
                 {
