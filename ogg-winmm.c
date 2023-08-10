@@ -146,6 +146,7 @@ int initialize_main(void)
     if(bMCIDevID){
         mciOpenParms.lpstrDeviceType = "waveaudio";
         int MCIERRret = 0;
+	// Could be changed to MCI_OPEN | MCI_WAIT to ensure the wave device has finished opening before continuing...
         if (MCIERRret = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(LPVOID) &mciOpenParms)){
             // Failed to open wave device.
             MAGIC_DEVICEID = 48879;
