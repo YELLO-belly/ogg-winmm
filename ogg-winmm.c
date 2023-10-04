@@ -1275,7 +1275,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             }
             //char devid_str[100];
             //sprintf(devid_str, "%d", MAGIC_DEVICEID);
-            //strcpy(ret, devid_str);
+            //if(cchReturn)strcpy(ret, devid_str); //Only fill the return buffer if it is expected (buffer size > 0)
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
@@ -1322,7 +1322,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
             }
             //char devid_str[100];
             //sprintf(devid_str, "%d", MAGIC_DEVICEID);
-            //strcpy(ret, devid_str);
+            //if(cchReturn)strcpy(ret, devid_str); //Only fill the return buffer if it is expected (buffer size > 0)
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
@@ -1337,7 +1337,7 @@ MCIERROR WINAPI fake_mciSendStringA(LPCTSTR cmd, LPTSTR ret, UINT cchReturn, HAN
         {
             //char devid_str[100];
             //sprintf(devid_str, "%d", MAGIC_DEVICEID);
-            //strcpy(ret, devid_str);
+            //if(cchReturn)strcpy(ret, devid_str); //Only fill the return buffer if it is expected (buffer size > 0)
             if ((strstr(cmdbuf, "notify")) && FullNotify && !opened){
                 dprintf("  MCI_NOTIFY\r\n");
                 dprintf("  Sending MCI_NOTIFY_SUCCESSFUL message...\r\n");
